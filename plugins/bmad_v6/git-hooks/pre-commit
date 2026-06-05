@@ -1,0 +1,98 @@
+#!/bin/bash
+# Pre-commit: fast quality gates — format + lint only (no tests, target <5s)
+set -e
+
+# Go
+if [ -f go.mod ]; then
+    echo "→ Go: format"
+    unformatted=$(gofmt -l .)
+    if [ -n "$unformatted" ]; then
+        echo "FAIL: gofmt required for:"
+        echo "$unformatted"
+        echo "Fix: gofmt -w ."
+        exit 1
+    fi
+
+    echo "→ Go: vet"
+    go vet ./...
+
+    echo "→ Go: lint (fast)"
+    if command -v golangci-lint &>/dev/null; then
+        golangci-lint run --fast
+    elif [ -x ~/go/bin/golangci-lint ]; then
+        ~/go/bin/golangci-lint run --fast
+    fi
+fi
+
+# Next.js (check before plain TS to use next lint instead of plain eslint)
+if [ -f next.config.js ] || [ -f next.config.ts ] || [ -f next.config.mjs ]; then
+    echo "→ Next.js: type check"
+    npx tsc --noEmit
+
+    echo "→ Next.js: lint"
+    npx next lint
+fi
+
+# TypeScript (non-Next.js projects)
+if [ -f tsconfig.json ] && [ ! -f next.config.js ] && [ ! -f next.config.ts ] && [ ! -f next.config.mjs ]; then
+    echo "→ TS: type check"
+    npx tsc --noEmit
+
+    echo "→ TS: lint"
+    npx eslint --max-warnings 0 .
+fi
+
+# Rust
+if [ -f Cargo.toml ]; then
+    echo "→ Rust: format"
+    cargo fmt --check
+
+    echo "→ Rust: lint"
+    cargo clippy -- -D warnings
+fi
+
+# Java (Maven)
+if [ -f pom.xml ]; then
+    echo "→ Java: checkstyle"
+    mvn -q checkstyle:check
+fi
+
+# Java (Gradle)
+if [ -f build.gradle ] || [ -f build.gradle.kts ]; then
+    # Skip if Android (handled by Kotlin Android block)
+    if ! grep -q 'android {' build.gradle 2>/dev/null && ! grep -q 'android {' build.gradle.kts 2>/dev/null; then
+        echo "→ Java/Gradle: checkstyle"
+        ./gradlew checkstyleMain --quiet 2>/dev/null || true
+    fi
+fi
+
+# PHP
+if [ -f composer.json ]; then
+    echo "→ PHP: phpstan"
+    if [ -f vendor/bin/phpstan ]; then
+        vendor/bin/phpstan analyse --level 8 --no-progress
+
+        echo "→ PHP: phpcs"
+        vendor/bin/phpcs 2>/dev/null || true
+    fi
+fi
+
+# Flutter
+if [ -f pubspec.yaml ]; then
+    echo "→ Flutter: analyze"
+    flutter analyze
+
+    echo "→ Flutter: format"
+    dart format --set-exit-if-changed .
+fi
+
+# Kotlin Android
+if ([ -f build.gradle ] || [ -f build.gradle.kts ]) && grep -q 'android {' build.gradle 2>/dev/null; then
+    echo "→ Kotlin: detekt"
+    ./gradlew detekt --quiet
+
+    echo "→ Kotlin: ktlint"
+    if command -v ktlint &>/dev/null; then ktlint --reporter plain; fi
+fi
+
+echo "✓ pre-commit passed"

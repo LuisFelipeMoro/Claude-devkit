@@ -1,0 +1,125 @@
+---
+name: planning
+description: Use when you need to break down analyzed requirements into an actionable execution plan — runs Architect to produce architecture.md and the Epic or Task Manifest. Coupled to the coding pipelines; produces plan artifacts only, never triggers implementation.
+---
+
+Create an execution plan ready for a coding pipeline to implement. If no task is provided, ask first.
+
+> **Scope**: planning artifacts only — this skill halts after producing the manifest.
+> ⚠ Implementation is NOT started by this skill.
+> To implement: `/multi-agent-coding-pipeline` (epics) or `/task-coding-pipeline` (single task).
+
+---
+
+## Phase 0 — Requirements Input
+
+Check for existing analysis artifacts:
+
+**If `product-brief.md` and `PRD.md` already exist** (from a prior `/analysis` run):
+- Load them as context
+- Skip to Phase 1
+
+**If `product-brief.md` exists but `PRD.md` does not**:
+- Load the existing Brief
+- Run PM only: Load `agents/pm.md` → **PRD.md** *(security ACs mandatory for I/O/auth epics)*
+- Skip Analyst step; show `✓ PRD.md`, then continue to Phase 1
+
+**If neither exists** — run full analysis inline:
+1. Load `agents/analyst.md` → **product-brief.md** *(include language context + security constraints)*
+2. Load `agents/pm.md` → **PRD.md** *(security ACs mandatory for I/O/auth epics)*
+
+Show: `✓ product-brief.md` / `✓ PRD.md` as each is produced.
+
+---
+
+## Phase 1 — Architecture
+
+Load `agents/architect.md` with Brief + PRD as input.
+
+Required output sections: Security Architecture + OWASP threat table + Mermaid data-flow diagram(s).
+
+Output: **architecture.md** — write to project root (show in full).
+
+Show: `✓ architecture.md`
+
+---
+
+## Phase 2 — Human Validation
+
+Present to user:
+- Mermaid diagram(s)
+- Tech stack decisions
+- Top ADRs and tradeoffs
+
+Ask: *"Does the architecture make sense? Any changes to libraries, strategies, or design? Approve / request changes?"*
+
+On changes → update `architecture.md` → re-confirm before continuing.
+
+**If `api-spec.yaml` was produced** (feature has HTTP endpoints):
+
+Present the API contract summary:
+- Endpoint list: `METHOD /path — operationId` for each endpoint
+- Auth scheme and which endpoints are protected
+- Key request/response schema names
+
+Ask: *"Does the API contract look right? Any changes to endpoints, schemas, auth, or error shapes before implementation starts? Once approved, Coder implements to this spec exactly — changes after that require updating the spec first."*
+
+Offer: *"Use `/grill-me` to stress-test the API design before committing — catches missing error cases, auth gaps, and schema problems before any code is written."*
+
+On spec changes → update `api-spec.yaml` → run `rtk npx @stoplight/spectral-cli lint api-spec.yaml --ruleset .spectral.yaml` → re-confirm before continuing.
+
+**Do not proceed to Phase 3 (Manifest) until both `architecture.md` and `api-spec.yaml` (if present) are approved.**
+
+---
+
+## Phase 3 — Manifest
+
+Determine scope from the PRD epic count:
+
+**Multiple epics (≥ 2)** → produce **Epic Manifest**:
+
+| Epic | Task | Stories/ACs | Security ACs | Key Constraints | Language |
+|------|------|-------------|--------------|-----------------|----------|
+| Epic 1: {title} | T1.1: {imperative} | AC1, AC2 | SEC-1 | NFR-1 | Go 1.26.2 |
+
+**Single task / small scope (1 epic)** → produce **Task Manifest**:
+
+| Sub-Task | Stories/ACs | Security ACs | Key Constraints | Language |
+|----------|-------------|--------------|-----------------|----------|
+| ST1: {imperative verb phrase} | AC1, AC2 | SEC-1 | NFR-1 | TypeScript 5 |
+
+`Language` must be populated from the Architect's Tech Stack decision — carries runtime, version, and framework (e.g. `Go 1.26.2`, `TypeScript 5 / Next.js 14`, `Java 21 / Spring Boot 3`). Every downstream agent reads Language from the Manifest — never inferred.
+
+Write to: `epic-manifest.md` or `task-manifest.md` at project root.
+
+Show: `✓ epic-manifest` or `✓ task-manifest`
+
+---
+
+## Phase 4 — Plan Summary
+
+> *(When invoked from `/multi-agent-coding-pipeline` or `/task-coding-pipeline`, this phase is informational only — print the summary, do NOT halt, let the pipeline orchestrator continue.)*
+
+Print the manifest and halt (standalone invocation only):
+
+```
+Plan ready.
+
+Artifacts produced:
+  ✓ product-brief.md
+  ✓ PRD.md
+  ✓ architecture.md
+  ✓ [epic-manifest | task-manifest]
+
+To implement:
+  → /multi-agent-coding-pipeline   — multiple epics (full BMAD v6 pipeline)
+  → /task-coding-pipeline          — single task (fast pipeline, no re-planning)
+
+⚠ This skill does not start implementation.
+  Invoke a pipeline skill to proceed.
+```
+
+---
+
+Use `references/output-format.md` section headers for all agent output.
+Load agent files on demand — never pre-load all at once.

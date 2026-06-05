@@ -1,0 +1,122 @@
+#!/bin/bash
+# Pre-push: full quality gates — tests + race + coverage + vulnerability scan
+set -e
+
+echo "→ Full quality gates before push..."
+
+# Go
+if [ -f go.mod ]; then
+    echo "→ Go: tests + race detection"
+    go test -race -coverprofile=/tmp/coverage.out -covermode=atomic ./...
+
+    echo "→ Go: coverage ≥85%"
+    total=$(go tool cover -func=/tmp/coverage.out | tail -1 | awk '{print $3}' | tr -d '%')
+    if awk "BEGIN {exit !($total < 85)}"; then
+        echo "FAIL: coverage ${total}% is below 85%"
+        exit 1
+    fi
+    echo "Coverage: ${total}% ✓"
+
+    echo "→ Go: vulnerability scan"
+    if command -v govulncheck &>/dev/null; then
+        govulncheck ./...
+    elif [ -x ~/go/bin/govulncheck ]; then
+        ~/go/bin/govulncheck ./...
+    else
+        echo "WARN: govulncheck not found — install: go install golang.org/x/vuln/cmd/govulncheck@latest"
+    fi
+fi
+
+# Next.js (check before plain TS)
+if [ -f next.config.js ] || [ -f next.config.ts ] || [ -f next.config.mjs ]; then
+    echo "→ Next.js: build"
+    npx next build
+
+    echo "→ Next.js: tests + coverage"
+    if npx jest --version &>/dev/null 2>&1; then
+        npx jest --coverage --passWithNoTests \
+            --coverageThreshold='{"global":{"lines":85}}'
+    else
+        npx vitest run --coverage
+    fi
+
+    echo "→ Next.js: audit"
+    npm audit --audit-level high
+fi
+
+# TypeScript (non-Next.js projects)
+if [ -f package.json ] && [ -f tsconfig.json ] && [ ! -f next.config.js ] && [ ! -f next.config.ts ] && [ ! -f next.config.mjs ]; then
+    echo "→ TS: tests + coverage"
+    npx jest --coverage --passWithNoTests \
+        --coverageThreshold='{"global":{"lines":85}}'
+
+    echo "→ TS: audit"
+    npm audit --audit-level high
+fi
+
+# Rust
+if [ -f Cargo.toml ]; then
+    echo "→ Rust: tests + coverage"
+    cargo test
+
+    echo "→ Rust: audit"
+    if command -v cargo-audit &>/dev/null; then
+        cargo audit
+    else
+        echo "WARN: cargo-audit not found — install: cargo install cargo-audit"
+    fi
+fi
+
+# Java (Maven)
+if [ -f pom.xml ]; then
+    echo "→ Java: tests + coverage"
+    mvn -q verify
+
+    echo "→ Java: dependency vulnerability scan"
+    mvn -q dependency-check:check 2>/dev/null || echo "WARN: OWASP dep-check not configured"
+fi
+
+# Java (Gradle — non-Android)
+if ([ -f build.gradle ] || [ -f build.gradle.kts ]) && ! grep -q 'android {' build.gradle 2>/dev/null; then
+    echo "→ Java/Gradle: tests + coverage"
+    ./gradlew test jacocoTestReport --quiet
+fi
+
+# PHP
+if [ -f composer.json ]; then
+    echo "→ PHP: tests + coverage"
+    if [ -f vendor/bin/phpunit ]; then
+        vendor/bin/phpunit --coverage-text \
+            --coverage-filter src/ 2>/dev/null || vendor/bin/phpunit
+    fi
+
+    echo "→ PHP: audit"
+    composer audit
+fi
+
+# Flutter
+if [ -f pubspec.yaml ]; then
+    echo "→ Flutter: tests + coverage"
+    flutter test --coverage
+
+    echo "→ Flutter: coverage ≥80%"
+    if command -v lcov &>/dev/null; then
+        pct=$(lcov --summary coverage/lcov.info 2>&1 | grep 'lines' | grep -oP '\d+\.\d+(?=%)' | head -1)
+        if [ -n "$pct" ] && awk "BEGIN {exit !($pct < 80)}"; then
+            echo "FAIL: Flutter coverage ${pct}% is below 80%"
+            exit 1
+        fi
+        echo "Flutter coverage: ${pct}% ✓"
+    fi
+fi
+
+# Kotlin Android
+if ([ -f build.gradle ] || [ -f build.gradle.kts ]) && grep -q 'android {' build.gradle 2>/dev/null; then
+    echo "→ Kotlin Android: tests + coverage"
+    ./gradlew test --quiet
+
+    echo "→ Kotlin Android: lint"
+    ./gradlew lint --quiet
+fi
+
+echo "✓ pre-push gates passed"

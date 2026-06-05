@@ -1,0 +1,7 @@
+{
+  "name": "pr-workflow",
+  "description": "PR workflow skills \u2014 full code review (OWASP + language-specific) and PR comment listing",
+  "author": {
+    "name": "Luis Moro"
+  }
+}

@@ -1,0 +1,82 @@
+---
+name: multi-agent-coding-pipeline
+description: Use when running the full BMAD v6 agile pipeline for a large feature or epic. Runs all 9 agents: Analyst → PM → Architect → ScrumMaster → Coder → QA → Reviewer → StressTester → Verdict.
+---
+
+Run the BMAD v6 agile pipeline. If no task is provided, ask first.
+
+---
+
+## Phase 1 — Planning (once)
+
+Load and follow `skills/planning.md` (Phase 0 through Phase 3).
+
+- If `product-brief.md` + `PRD.md` already exist (from a prior `/analysis` run): load them and skip Phase 0 (inline analysis).
+- If `architecture.md` already exists and was approved: skip Phases 0–2 and proceed directly to Phase 3 (Manifest).
+- On changes requested during human validation: update `architecture.md` → re-confirm before continuing.
+
+Complete Phases 0–3 of the planning skill (Phase 4 is informational when invoked from a pipeline). Once the **Epic Manifest** is confirmed, continue with Phase 2 below.
+
+---
+
+## Phase 2 — Epic Loop (repeat per epic)
+
+**A. Stories** — `agents/scrum-master.md`
+- Input: Epic Manifest rows for current epic + Architecture
+- Output: one `story-{slug}.md` per task (scoped architecture sections only; include Security Points)
+
+**B. Parallel Coding** — one subagent per story:
+- Each receives: `agents/coder.md` + `story-{slug}.md`
+- Coder runs Phase 0 Analysis before writing code (reads spec, explores existing patterns, drafts implementation proposal — mandatory)
+- Coder emits `CODER DONE` signal when implementation is ready for QA
+- Orchestrator stores compact ref: `"T1.1: {file}.{ext}, {N} lines, implements {Interface}"`
+
+**C. QA** — `agents/qa.md`
+- Input: ACs from Epic Manifest (including Security ACs) + full code
+- Must include ≥1 security test per Security AC
+
+Quinn runs tests and all quality gates. Route on Quinn's output signal:
+
+- `QA→REVIEWER APPROVAL` → proceed to D (Review + Stress in parallel)
+- `QA→CODER BUG REPORT` or `QA→CODER COVERAGE REQUEST` → Bug-Fix Loop
+- `QA ESCALATION` (after 3 iterations) → proceed to D with FAIL status
+
+See `references/quality-gate-reference.md` **Bug-Fix Loop Protocol** for exact loop procedure, iteration counting, escalation format, and coverage failure sub-path.
+
+**D. Review + Stress** *(triggered by QA signal — never before QA approval or escalation)*:
+- `agents/reviewer.md` → full code; apply language-specific checks
+- `agents/stress.md` → full code + tests; include Security Under Stress
+
+Never dispatch Reviewer before receiving `QA→REVIEWER APPROVAL` or `QA ESCALATION`.
+
+If Reviewer or StressTester emits `TUNER REQUEST` → load `agents/tuner.md` (Tyler):
+- Tyler applies MINOR/NIT fixes; emits `TUNER COMPLETE`
+- Reviewer re-scores only the changed files; use higher score for Verdict
+- Maximum 2 iterations; on `TUNER LIMIT REACHED` → proceed to E
+
+**E. Verdict** — `agents/verdict.md`
+- Input: Review score + Stress score + QA summary + AC checklist
+- Security Gate section required; unmitigated CRITICAL security = automatic NOT READY
+
+**F. Checkpoint**
+
+| Score | Security | Action |
+|-------|----------|--------|
+| ≥ 8.0 | No CRITICAL | Proceed to next epic or show final summary |
+| ≥ 8.0 | CRITICAL security | NOT READY — security fix required; re-run pipeline after fix |
+| < 8.0 | Any | Show issues; ask: *"Fix and re-run / skip / stop?"* |
+
+On re-run: pass only the delta (CRITICAL/MAJOR issues + failing ACs).
+
+**Post-verdict (PRODUCTION READY on final epic only)**: load `agents/devops.md` (Ops) — generates Dockerfile, .dockerignore, docker-compose.yml, optional CI/k8s.
+
+> **Context Budget**: Between epics: drop implementation code, test files, and stories for completed epics. Retain: Architecture + Manifest + all scores (Review/Stress/QA/Verdict per epic).
+> If running 4+ epics or context >75% full: summarize completed epics to one-line refs:
+> `"Epic {N}: {title} — DONE (Review: X/10, Stress: Y/10, QA: Z/10)"` — never drop scores.
+> At context >90%: pause, summarize all prior artifacts, confirm with user before continuing.
+
+---
+
+Use `references/output-format.md` headers. Show Pipeline Summary (with Security Gate + Coverage) after each Verdict.
+Load agent files on demand — never pre-load all at once.
+For example tasks and progressive workflow patterns, see `references/presets.md`.

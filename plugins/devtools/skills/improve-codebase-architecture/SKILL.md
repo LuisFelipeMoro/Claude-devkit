@@ -1,0 +1,53 @@
+---
+name: improve-codebase-architecture
+description: Use when deepening architectural quality of a codebase. Finds coupling, boundary violations, missed abstractions, and SRP failures. Produces HTML report in /tmp. Offers ADRs and grilling loop. Trigger phrases: "improve architecture", "architectural review", "find coupling", "refactor architecture", "codebase health", "zoom out", "architectural debt".
+---
+
+Report findings only — never fix in this skill. Each finding includes severity, location, and a concrete recommendation.
+
+## Phase 1 — Map (1 Explore sub-agent, model: haiku)
+
+Input: Working directory. Optionally: focus area.
+Output: Raw observations list.
+Boundary: no analysis, no recommendations.
+
+```
+Agent(
+  subagent_type: "Explore",
+  model: "haiku",
+  prompt: "Map [cwd]. Return:
+  1. Module/package dependency list (what imports what)
+  2. Files >300 lines with line count
+  3. Domain logic found in transport/DB/cache layers (file:line)
+  4. 3+ callers of identical logic with no shared abstraction
+  5. Circular or unexpected cross-feature imports
+  Keep each list under 20 entries. Raw observations only — no analysis."
+)
+```
+
+## Phase 2 — Score
+
+Input: Phase 1 observations.
+Output: Findings grouped by severity.
+
+| Severity | Examples |
+|----------|---------|
+| Critical | Domain logic in HTTP/DB layer; circular imports; unhandled errors on mutation path |
+| High | 3+ callers duplicating logic; file >500 lines; cross-feature deep imports |
+| Medium | File 300–500 lines; inconsistent patterns; magic values |
+| Low | Naming inconsistency; minor duplication; dead code |
+
+## Phase 3 — Report
+
+Write HTML report to `/tmp/arch-report-<YYYY-MM-DD>.html`.
+See `references/arch-report-reference.md` for HTML scaffold.
+Print: `Architecture report: /tmp/arch-report-<date>.html — N critical, N high, N medium, N low findings.`
+
+## Phase 4 — Grill (optional)
+
+Offer: "Want to stress-test any finding? Type `/grill-me` with the finding."
+
+## Phase 5 — ADR (optional)
+
+For each Critical/High finding the user wants to address: offer `docs/adr/ADR-NNN-title.md`.
+See `references/arch-report-reference.md` for ADR template.
