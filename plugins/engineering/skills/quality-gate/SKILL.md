@@ -34,7 +34,7 @@ For gate commands per stack, see `references/quality-gate-reference.md`.
 1. Format check *(fastest)*
 2. Type check / vet / static analysis
 3. Lint
-4. Tests + coverage
+4. Tests + coverage — the mandatory test-runner sensor; every changed source file should have a corresponding test (TDD evidence). Coverage below threshold = FAIL.
 5. Race detector *(Go only)*
 6. Vulnerability scan *(network — run last)*
 

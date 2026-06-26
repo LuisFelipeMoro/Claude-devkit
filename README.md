@@ -200,14 +200,16 @@ For large features and epics. Runs up to 11 agents (9 core + Tuner + DevOps):
 PLANNING
   Mary (Analyst)      → product-brief.md
   John (PM)           → PRD.md
-  Winston (Architect) → architecture.md  ← human validation checkpoint
-  Bob (ScrumMaster)   → story-{slug}.md per task
+  Winston (Architect) → architecture.md
+  /grill-me           → stress the plan (mandatory) ← human resolves open questions
+  Bob (ScrumMaster)   → story-{slug}.md per task (ACs = frozen contract)
 
-IMPLEMENTATION (per story — strict agent protocol)
-  Amelia (Coder)      → implementation code  [emits CODER DONE]
+IMPLEMENTATION (per story — strict agent protocol, TDD)
+  Amelia (Coder)      → failing test FIRST → impl → refactor (owns tests + code)  [emits CODER DONE]
         ↕ QA loop (max 3 iterations)
-  Quinn (QA)          → tests + quality gates
-        │ gate fail → QA→CODER BUG REPORT → Amelia fixes → Quinn re-runs
+  Quinn (QA)          → audits tests (intent, corner cases, no tautologies) + runs gates
+        │ gate fail   → QA→CODER BUG REPORT  → Amelia fixes → Quinn re-runs
+        │ weak/missing test → QA→CODER TEST GAP → Amelia writes it → Quinn re-audits
         │ coverage gap → QA→CODER COVERAGE REQUEST → Amelia refactors
         └ all green → QA→REVIEWER APPROVAL  ← Reviewer never runs before this
 
@@ -226,7 +228,7 @@ POST-VERDICT (if PRODUCTION READY)
 
 ### Fast Pipeline — `/task-coding-pipeline <task>`
 
-Skips Analyst + PM. Starts directly at Architecture → Decompose into sub-tasks → Implement per sub-task. Same agent protocol (Coder → QA loop → QA approval → Reviewer).
+Skips Analyst + PM. Starts directly at Architecture → grill-me plan stress → Decompose into sub-tasks → Implement per sub-task (TDD). Same agent protocol (Coder TDD → QA audit loop → QA approval → Reviewer).
 
 ### Progressive Workflow
 
@@ -316,7 +318,7 @@ What are you trying to do?
 
 **Use when:** building a large feature, epic, or new service from scratch.
 
-**What happens:** Runs all 11 agents in sequence. Mary (Analyst) writes a product brief → John (PM) writes a PRD → Winston (Architect) designs the architecture and API spec → **human validates** → Bob (ScrumMaster) decomposes into stories → Amelia (Coder) implements → Quinn (QA) tests and gates → Reviewer + StressTester score in parallel → Tyler (Tuner) polishes minor findings → Verdict issues PRODUCTION READY / NOT READY → Ops (DevOps) generates Dockerfile + docker-compose.
+**What happens:** Runs all 11 agents in sequence. Mary (Analyst) writes a product brief → John (PM) writes a PRD → Winston (Architect) designs the architecture and API spec → **`/grill-me` stresses the plan + human resolves open questions** → Bob (ScrumMaster) decomposes into stories (ACs = frozen contract) → Amelia (Coder) drives TDD: failing test first, then code, then refactor → Quinn (QA) audits the tests and runs the gates → Reviewer + StressTester score in parallel → Tyler (Tuner) polishes minor findings → Verdict issues PRODUCTION READY / NOT READY → Ops (DevOps) generates Dockerfile + docker-compose.
 
 **Example:**
 ```
@@ -331,7 +333,7 @@ What are you trying to do?
 
 **Use when:** implementing a single known task — a new endpoint, a refactor, a small feature. You already know what needs to be built.
 
-**What happens:** Skips Analyst + PM. Winston architects the solution + writes API spec → **human validates** → Bob writes a story → Amelia codes → Quinn gates → Reviewer + StressTester → Tuner → Verdict → DevOps. Same quality bar as the full pipeline, faster start.
+**What happens:** Skips Analyst + PM. Winston architects the solution + writes API spec → **`/grill-me` stresses the plan + human validates** → Bob writes a story → Amelia drives TDD (failing test → code → refactor) → Quinn audits tests + gates → Reviewer + StressTester → Tuner → Verdict → DevOps. Same quality bar as the full pipeline, faster start.
 
 **Example:**
 ```
@@ -345,7 +347,7 @@ What are you trying to do?
 
 **Use when:** something is broken — wrong behavior, crash, regression, or a test that fails.
 
-**What happens:** Sam (Bug Investigator) explores the codebase, finds root cause, and writes a RED failing test. Amelia fixes the implementation only (never the test). Quinn verifies all gates still pass. Reviewer scores the fix. Maximum 3 fix iterations before escalation.
+**What happens:** Sam (Bug Investigator) explores the codebase, finds root cause, and writes a RED failing test. Amelia makes it GREEN with the minimum fix (and may add regression tests — never weakening Sam's RED test). Quinn verifies all gates still pass. Reviewer scores the fix. Maximum 3 fix iterations before escalation.
 
 **Example:**
 ```
@@ -691,8 +693,8 @@ This applies everywhere: coder, reviewer, QA gates, skill implementations. If co
 For any feature with HTTP endpoints, the pipeline enforces a spec-first workflow:
 
 1. **Architect** writes `api-spec.yaml` (OpenAPI 3.1) before any code — defines all endpoints, schemas, error shapes, auth
-2. **Coder** implements against the spec exactly; annotations must reproduce spec `operationId` + status codes
-3. **QA** runs Spectral lint + schema validation as quality gates; contract tests for integration phase
+2. **Coder** writes failing contract tests first (status, schema, auth per `operationId`), then implements against the spec exactly; annotations must reproduce spec `operationId` + status codes
+3. **QA** audits that a contract test exists per `operationId`, then runs Spectral lint + schema validation as quality gates
 4. **Reviewer** checks for spec drift (annotation ↔ spec ↔ implementation alignment)
 
 Spec is the source of truth — code follows spec, never the reverse.
@@ -721,6 +723,7 @@ Spec is the source of truth — code follows spec, never the reverse.
 
 | Hook | Trigger | Behaviour |
 |------|---------|-----------|
+| `session-bootstrap.sh` | SessionStart | Harness memory — prints `PROGRESS.md` so a new session resumes with done/failed/current state |
 | `env-guard.sh` | PreToolUse → Read | Blocks reads of `.env`, `.envrc`, `.env.*` — hard exit |
 | `pr-review-responder.sh` | PostToolUse → Bash | After `git push`: surfaces PR comments; Claude fixes valid issues and replies |
 | RTK hook | PreToolUse → Bash | Every Bash command routed through RTK for compact output |

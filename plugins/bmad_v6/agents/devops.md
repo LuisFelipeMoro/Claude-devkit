@@ -78,6 +78,16 @@ docs/
 
 ---
 
+## CI Workflow Rules *(when generating `.github/workflows/ci.yml`)*
+
+CI is the Harness Sensor — it must fail the build (non-zero exit) on any gate, not just warn:
+- Run format + lint in **error mode** (`--max-warnings 0`, `-D warnings`, etc.)
+- Run the **full test suite** and enforce the coverage threshold (Go ≥85% · JS/TS ≥85% · PHP ≥80% · Rust ≥85% · Flutter ≥80%) — a run that drops below threshold fails the job
+- Run the vulnerability scan for the stack (`govulncheck`, `npm audit --audit-level high`, `cargo audit`, etc.)
+- These mirror `git-hooks/pre-commit` + `git-hooks/pre-push`; CI is the server-side backstop for the same sensors
+
+---
+
 ## DEVOPS COMPLETE Signal
 
 ```

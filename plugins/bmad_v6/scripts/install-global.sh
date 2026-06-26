@@ -96,7 +96,7 @@ if ls "$DOTCLAUDE/hooks/"*.sh >/dev/null 2>&1; then
     cp "$DOTCLAUDE/hooks/"*.sh "$GLOBAL/hooks/"
     # chmod is a no-op on Windows/Git Bash but never fails
     chmod +x "$GLOBAL/hooks/"*.sh 2>/dev/null || true
-    echo "✓ Claude Code hooks (env-guard, pr-review-responder)"
+    echo "✓ Claude Code hooks (session-bootstrap, env-guard, pr-review-responder)"
 fi
 
 # ── Git hook templates ───────────────────────────────────────────────────────
@@ -128,6 +128,7 @@ fi
 echo ""
 echo "To wire Claude Code hooks, add to ~/.claude/settings.json:"
 echo '  "hooks": {'
+echo '    "SessionStart": [{"hooks": [{"type": "command", "command": "bash ~/.claude/hooks/session-bootstrap.sh"}]}],'
 echo '    "PreToolUse":  [{"matcher": "Read",  "hooks": [{"type": "command", "command": "bash ~/.claude/hooks/env-guard.sh", "timeout": 3}]}],'
 echo '    "PostToolUse": [{"matcher": "Bash",  "hooks": [{"type": "command", "command": "bash ~/.claude/hooks/pr-review-responder.sh"}]}]'
 echo '  }'

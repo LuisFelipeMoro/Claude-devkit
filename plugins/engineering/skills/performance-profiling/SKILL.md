@@ -55,7 +55,18 @@ Read the flame graph:
 - Tall stacks = deep call chains
 - Focus on the widest bars at the top of the flame
 
-## Step 4 — Common Go Performance Issues and Fixes
+## Step 4 — Lock Behaviour First (characterization test, RED-safe)
+
+Optimization must not change behaviour. Before touching any code, ensure a test pins the current observable output for the hot path — if one doesn't exist, write it (it passes against current code; it goes RED the moment an optimization breaks correctness). Then add the benchmark from Step 6 as the *performance* assertion. Only optimize with both in place; the characterization test stays GREEN through every change.
+
+```go
+func TestProcessOrder_BehaviourUnchanged(t *testing.T) {
+    got := ProcessOrder(ctx, "order-123")     // locks correct output
+    require.Equal(t, wantResult, got)          // must stay GREEN through the optimization
+}
+```
+
+## Step 5 — Common Go Performance Issues and Fixes
 
 | Symptom | Cause | Fix |
 |---------|-------|-----|
@@ -66,9 +77,9 @@ Read the flame graph:
 | Slow DB queries | Missing index, N+1 queries | Add index; batch queries; use `EXPLAIN ANALYZE` |
 | High `runtime.mallocgc` | Excessive heap allocations | Escape analysis: `go build -gcflags="-m" ./...` to see what escapes |
 
-## Step 5 — Benchmark Before/After
+## Step 6 — Benchmark Before/After
 
-Always write a benchmark to confirm improvement:
+The benchmark is the performance assertion that pairs with the Step 4 characterization test. Always write it to confirm improvement (and guard against regression):
 
 ```go
 func BenchmarkProcessOrder(b *testing.B) {
@@ -88,7 +99,7 @@ go test -bench=BenchmarkProcessOrder -benchmem -count=5 ./...
 
 Report: include before/after numbers in the PR description.
 
-## Step 6 — Continuous Profiling (production)
+## Step 7 — Continuous Profiling (production)
 
 For production visibility, consider [Pyroscope](https://pyroscope.io) (open source) or Google Cloud Profiler:
 

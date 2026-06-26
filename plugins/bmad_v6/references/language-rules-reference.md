@@ -2,6 +2,8 @@
 
 Shared reference for Coder (Amelia) and Reviewer. Load on demand. Do not pre-load.
 
+> **TDD rule**: Amelia writes the failing test first, then the implementation that satisfies these rules. Amelia owns both test and implementation files; Quinn (QA) audits the tests but authors none. Coverage thresholds below are the floor, met by tests written test-first — never back-filled to hit a number.
+
 > **context7 rule**: Before applying any rule that references a specific library, linter, annotation tool, or framework — fetch its current docs via context7. Rules in this file reflect known-good patterns; library APIs evolve and the current version may differ. Always verify import paths, method signatures, and config keys against live docs before writing code.
 
 For quality gate commands, see `references/quality-gate-reference.md`.

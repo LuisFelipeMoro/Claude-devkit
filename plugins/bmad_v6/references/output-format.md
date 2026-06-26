@@ -9,8 +9,8 @@
 ## 📄 John (PM) — PRD
 ## 🏗️ Winston (Architect) — Architecture
 ## 📝 Bob (SM) — Story File
-## 💻 Amelia (Coder) — Implementation
-## 🧪 Quinn (QA) — Test Suite
+## 💻 Amelia (Coder) — TDD Implementation (tests + code)
+## 🧪 Quinn (QA) — Test Audit & Gates
 ## 🔍 Reviewer — Code Review  [Score: X/10]
 ## 🔥 Stress Tester — Stress Report  [Score: X/10]
 ## 🏁 Verdict — Production Readiness
@@ -30,8 +30,8 @@
 | John | PM | PRD.md ({N} FRs, {M} NFRs) | — |
 | Winston | Architect | architecture.md ({N} ADRs) | — |
 | Bob | SM | story-{slug}.md | — |
-| Amelia | Coder | {filename}.{ext} ({N} lines) | — |
-| Quinn | QA | {N} tests, coverage {C}% | — |
+| Amelia | Coder | tests + impl ({N} files, TDD red→green) | — |
+| Quinn | QA | audited {N} tests, coverage {C}% | — |
 | Reviewer | Code Review | {N} issues ({X} critical) | {score}/10 |
 | Stress | Chaos/Perf | {N} scenarios | {score}/10 |
 | Verdict | Final Gate | {VERDICT} | {overall}/10 |
@@ -56,8 +56,8 @@
 | Analysis | Mary + John | product-brief.md + PRD.md |
 | Planning | Winston | architecture.md + manifest |
 | Stories | Bob | story-{slug}.md files |
-| Code | Amelia | Implementation |
-| QA Tests | Quinn | Test suite + coverage |
+| Code | Amelia | Tests + implementation (TDD) |
+| QA Audit | Quinn | Test audit + gates + coverage |
 | Review | Reviewer | Review + score |
 | Stress | Stress Tester | Stress report + score |
 | Verdict | Verdict Agent | Final verdict + summary |

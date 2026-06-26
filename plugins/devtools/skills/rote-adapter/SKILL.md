@@ -28,6 +28,7 @@ Integration target: [paste user's integration description — service name, what
 Working directory: [cwd]
 
 Run your full Phase 0 → Phase 7 (Discovery → Analysis → Research → Auth → Scope → Creation → Verification → Crystallization).
+Contract-first: define the Phase 8 acceptance test (which read-only tool you will call and what a valid response looks like) BEFORE the create command. The adapter is done only when that predefined test passes.
 
 Return ONLY:
 1. Adapter name + file path(s) created

@@ -46,9 +46,15 @@ Check in this order:
 - `innerHTML` with user data → CRITICAL
 - Missing `@swagger`/`@ApiOperation` on new endpoints → MEDIUM
 
-### General
+### TDD Compliance (every behaviour in the diff)
 - Missing tests for new code paths → HIGH
+- Test asserts nothing real — tautology, snapshot-only, or asserts a mock was called instead of the result → HIGH
+- Test can never fail (system-under-test fully mocked away) → HIGH
+- Happy path only — no corner/error/boundary cases for the inputs the change touches → MEDIUM
+- An existing test was weakened, deleted, or rewritten to make the change pass → HIGH
 - Coverage regression (check CI checks output) → MEDIUM
+
+### General
 - Commented-out code → LOW
 - TODO/FIXME in production paths → LOW
 

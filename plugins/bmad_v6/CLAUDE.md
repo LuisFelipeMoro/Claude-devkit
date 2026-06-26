@@ -1,5 +1,21 @@
 # Engineering Standards
 
+## Harness Model (Guides · Sensors · Memory · Orchestration)
+
+This devkit is a Harness. Four components, all mandatory:
+- **Guides** (feed-forward): this CLAUDE.md, `architecture.md`, specs, conventions — inject the right context per task.
+- **Sensors** (feedback): linters in ERROR mode + test runners that return exit 0/1, never prose to interpret. `git-hooks/pre-commit` (format+lint), `git-hooks/pre-push` (tests+coverage+vuln), and CI mirror each other. A task is not done until the sensors pass.
+- **Memory & Progress**: `PROGRESS.md` at repo root (`Done` / `Failed` / `Current State` / `Next`) — appended at each checkpoint, read at session start by the SessionStart bootstrap hook. Atomic commits.
+- **Orchestration**: an orchestrator spawns isolated subagents with pre-agreed contracts. **Implementer ≠ validator** — Amelia (Coder) builds; Quinn (QA), Reviewer, Stress validate. The acceptance contract (ACs + Definition of Done) is frozen BEFORE any code.
+
+## TDD Discipline (non-negotiable — all code)
+
+Every skill, agent, and pipeline drives code test-first:
+- **Red → Green → Refactor**: failing test first, observed to fail for the right reason, minimum code to pass, refactor under green.
+- No implementation line before a failing test exists for it. Coverage thresholds are met by tests written first — never back-filled to hit a number.
+- **Coder (Amelia) owns tests + implementation; QA (Quinn) audits** the tests (intent-encoding, corner cases, no tautologies/over-mocking) and runs the gates — QA authors no primary tests.
+- Plans are stress-tested with `/grill-me` before coding; questions the plan cannot resolve go to the human — never deferred into implementation.
+
 ## Sub-agent Discipline
 
 - **1 sub-agent** — default. Good for one focused task (exploration, data fetch, implementation).
@@ -7,7 +23,15 @@
 - **3 sub-agents** — only when 3 tasks are clearly independent, time-critical, and cannot share context. Justify before spawning.
 - **Never spawn 4+** in a single turn.
 
-Use `haiku` for read-only exploration or data fetch. Use `sonnet` for code writing or reasoning.
+### Model assignment (match the model to the task — token & cost efficiency)
+
+| Work | Model | Examples |
+|------|-------|----------|
+| Read-only / quick answers | `haiku` | Explore, code mapping, "where is X", data fetch, locating callers |
+| Planning · design · reasoning · validation · long sessions | `sonnet` | Analyst, PM, Architect, Scrum Master, Bug Investigator (diagnosis), QA audit, Reviewer, Stress, Verdict, pipeline orchestrators |
+| Writing/changing code | `opus` | Coder (Amelia), Tuner (Tyler), DevOps (IaC/CI), any direct implementation or TDD red→green |
+
+Default to the cheapest model that fits the task. Never run exploration on `opus`; never author production code on `haiku`. Escalate one tier only with a stated reason.
 
 ## Tool Preferences
 - **LSP first**: Use LSP (go-to-definition, find-references, diagnostics) for code navigation — grep only when LSP not applicable

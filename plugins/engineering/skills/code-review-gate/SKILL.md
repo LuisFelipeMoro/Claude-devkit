@@ -35,7 +35,7 @@ Load `agents/reviewer.md`. Pass:
 1. Full content of each changed file (not a diff — Reviewer needs complete context)
 2. One-line gate summary: `"Gates: all green — {X}% coverage, {N} tests"`
 
-Reviewer runs the full Security Deep-Dive checklist and language-specific checks.
+Reviewer runs the full Security Deep-Dive checklist, language-specific checks, and the **TDD-compliance check**: every behaviour shipped in the diff has a test that asserts observable outcome (not a tautology, not mock-call-only), corner/error cases are covered, and no existing test was weakened to pass. Absent or tautological tests for shipped behaviour = MAJOR finding.
 
 ## Phase 3 — Verdict
 
