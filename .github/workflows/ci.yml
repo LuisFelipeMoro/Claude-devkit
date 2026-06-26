@@ -1,0 +1,51 @@
+name: ci
+
+# Harness Sensor for the devkit itself — fails the build (non-zero exit) on any
+# shell or JSON defect. The toolkit is held to its own "Sensors return exit codes"
+# bar instead of trusting the docs.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  shell:
+    name: shell — shellcheck + syntax
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: shellcheck (error severity)
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y shellcheck
+          # Every tracked shell script must pass shellcheck at error severity.
+          fail=0
+          while IFS= read -r f; do
+            echo "→ shellcheck $f"
+            shellcheck --severity=error "$f" || fail=1
+          done < <(git ls-files '*.sh' 'plugins/*/git-hooks/*' 'plugins/*/hooks/*' | grep -vE '\.(md|json)$')
+          exit $fail
+      - name: bash -n syntax
+        run: |
+          fail=0
+          while IFS= read -r f; do
+            bash -n "$f" || { echo "SYNTAX FAIL: $f"; fail=1; }
+          done < <(git ls-files '*.sh' 'plugins/*/git-hooks/*' 'plugins/*/hooks/*' | grep -vE '\.(md|json)$')
+          exit $fail
+
+  json:
+    name: json — manifests valid
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: validate all JSON
+        run: |
+          fail=0
+          while IFS= read -r f; do
+            python3 -c "import json,sys; json.load(open(sys.argv[1]))" "$f" \
+              && echo "OK $f" || { echo "BAD JSON: $f"; fail=1; }
+          done < <(git ls-files '*.json')
+          exit $fail

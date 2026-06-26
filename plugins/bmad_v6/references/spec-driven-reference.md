@@ -27,9 +27,13 @@ Architect (Winston)
 Scrum Master (Bob)
   └─ story references operationId(s) from spec
        ↓
-Coder (Amelia)
+Coder — Backend (producer)
   └─ Phase 0 reads api-spec.yaml → writes failing contract tests first (status, schema, auth)
   └─ Implements to spec exactly until those tests pass; annotations match spec (not vice versa)
+Coder — Frontend (consumer)
+  └─ writes failing tests that mock the spec'd endpoints (msw/nock) and assert the UI
+     handles every spec response (success + each error shape) → then implements to those mocks
+  └─ the api-spec is the shared contract between the two coders — neither invents shapes
        ↓
 QA (Quinn)
   └─ Audits the contract tests exist per operationId (else QA→CODER TEST GAP)

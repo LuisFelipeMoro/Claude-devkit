@@ -37,7 +37,7 @@ Default to the cheapest model that fits the task. Never run exploration on `opus
 - **LSP first**: Use LSP (go-to-definition, find-references, diagnostics) for code navigation — grep only when LSP not applicable
 - **context7 for docs**: Always fetch current docs via context7 for any library/framework/SDK/API — never rely on training data alone
 - **Notifications**: Use PushNotification when waiting >30s on external process, CI, or user input
-- **Parallel work**: Use `superpowers:using-git-worktrees` for parallel feature branches
+- **Parallel work**: Use native `git worktree` for parallel feature branches
 - **Never read `.env` or `.envrc`**: May contain production secrets — never read, never echo, never log
 - **After git push**: Hook surfaces open PR comments automatically — for each: if valid issue (bug/missing test/security hole), fix the code + reply via `gh pr comment` explaining what changed; if not actionable (style preference/opinion/already done), reply explaining why. Never leave PR comments unanswered.
 
@@ -47,29 +47,29 @@ Before writing code, designing architecture, reviewing security, or running qual
 
 | Task | Skill | Trigger phrases |
 |------|-------|-----------------|
-| New feature / epic / large task | `/multi-agent-coding-pipeline` | "build", "create", "new feature", "epic", "implement X from scratch" |
-| Bug investigation and fix | `/bug-fix` | "bug", "fix", "broken", "not working", "wrong behavior", "unexpected", "crash", "regression", "debug", "fails with" |
-| Single task, small feature | `/task-coding-pipeline` | "small change", "quick task", "add X to existing" |
-| Architecture design | `/architecture` | "architect", "design the system", "how should we structure", "system design" |
-| Requirements analysis (no code, no plan) | `/analysis` | "analyze requirements", "assess", "evaluate context", "investigate requirements", "what should we build", "what do we need" |
-| Execution plan (no implementation) | `/planning` | "plan", "planning", "make a plan", "create execution plan", "break down into tasks", "roadmap", "how would we approach" |
-| Security audit | `/security-review` | "security", "audit", "vulnerability", "OWASP", "pen test", "check for issues", "prompt injection", "LLM security", "LLM01", "AI security", "GenAI risk" |
-| Quality gates / CI check | `/quality-gate` | "quality gate", "run gates", "CI check", "lint", "coverage", "run tests" |
-| PR review or post-push comments | `/pr-review` | "review PR", "check PR", "PR comments", "code review", "review this diff" |
-| Business rules mapping | `/business-analysis` | "business rules", "business logic", "domain rules", "what does the business require" |
-| Technical contract mapping | `/technical-analysis` | "technical contract", "interface design", "API contract", "map the interfaces" |
-| Cut a release | `/release-management` | "release", "cut a release", "ship", "version", "tag", "changelog" |
-| Write a DB migration | `/database-migration` | "migration", "db migration", "schema change", "add column", "alter table" |
-| Add logging / metrics / tracing | `/observability` | "logging", "metrics", "tracing", "observability", "add logs", "instrument" |
-| Performance investigation | `/performance-profiling` | "performance", "slow", "profiling", "optimize", "latency", "throughput" |
-| Run existing integration flow | `/rote` | "run my flow", "search flows", "list adapters", "use existing integration", "what flows do I have" |
+| New feature / epic / large task | `/multi-agent-coding-pipeline` | "build", "create", "new feature", "epic", "implement X from scratch", "greenfield", "develop", "stand up a service", "ship a new", "MVP", "build me a" |
+| Bug investigation and fix | `/bug-fix` | "bug", "fix", "broken", "not working", "wrong behavior", "unexpected", "crash", "regression", "debug", "fails with", "throws", "stack trace", "flaky", "intermittent", "why does this happen", "stopped working" |
+| Single task, small feature | `/task-coding-pipeline` | "small change", "quick task", "add X to existing", "implement this task", "single endpoint", "add a method", "add a field", "one focused task" |
+| Architecture design | `/architecture` | "architect", "design the system", "how should we structure", "system design", "component design", "data flow", "high-level design", "X or Y for structure" |
+| Requirements analysis (no code, no plan) | `/analysis` | "analyze requirements", "assess", "evaluate context", "investigate requirements", "what should we build", "what do we need", "scope this", "discovery", "requirements" |
+| Execution plan (no implementation) | `/planning` | "plan", "planning", "make a plan", "create execution plan", "break down into tasks", "roadmap", "how would we approach", "task breakdown", "sequence the work" |
+| Security audit | `/security-review` | "security", "audit", "vulnerability", "OWASP", "pen test", "check for issues", "prompt injection", "LLM security", "LLM01", "AI security", "GenAI risk", "is this safe", "threat model", "CVE", "auth bypass", "injection" |
+| Quality gates / CI check | `/quality-gate` | "quality gate", "run gates", "CI check", "lint", "coverage", "run tests", "is it green", "does it pass", "type check", "vet", "format check" |
+| PR review or post-push comments | `/pr-review` | "review PR", "check PR", "PR comments", "code review", "review this diff", "address review comments", "look at the pull request" |
+| Business rules mapping | `/business-analysis` | "business rules", "business logic", "domain rules", "what does the business require", "validation rules", "domain model", "use cases" |
+| Technical contract mapping | `/technical-analysis` | "technical contract", "interface design", "API contract", "map the interfaces", "routes", "endpoints", "infrastructure overview", "what calls what" |
+| Cut a release | `/release-management` | "release", "cut a release", "ship", "version", "tag", "changelog", "bump version", "semver", "publish", "release notes" |
+| Write a DB migration | `/database-migration` | "migration", "db migration", "schema change", "add column", "alter table", "drop column", "rename column", "add index", "backfill", "DDL" |
+| Add logging / metrics / tracing | `/observability` | "logging", "metrics", "tracing", "observability", "add logs", "instrument", "spans", "OpenTelemetry", "structured logs", "monitoring" |
+| Performance investigation | `/performance-profiling` | "performance", "slow", "profiling", "optimize", "latency", "throughput", "memory leak", "high CPU", "pprof", "benchmark", "bottleneck", "p99" |
+| Run existing integration flow | `/rote` | "run my flow", "search flows", "list adapters", "use existing integration", "what flows do I have", "fetch from", "call the API", "list my tickets", "get data from" |
 | Create a NEW integration adapter | `/rote-adapter` | "connect to X for the first time", "build adapter", "create integration", "new connector", "add new integration", "integrate with X" |
-| TDD implementation | `/superpowers:test-driven-development` | direct code ask outside a pipeline — "write this function", "implement this method", "add this helper", small focused coding not warranting a full pipeline |
-| Gate + review after any code change | `/code-review-gate` | "gate and review", "pre-push check", "ready to push", "sign off my code", "check before PR", "done coding" |
-| Stress-test a plan/design | `/grill-me` | "grill me", "challenge this", "stress-test", "poke holes", "pick this apart" |
-| Architectural health review | `/improve-codebase-architecture` | "improve architecture", "zoom out", "architectural review", "find coupling", "codebase health" |
-| End-of-session handoff doc | `/handoff` | "handoff", "wrap up", "end session", "save context", "compact this session" |
-| Create a new skill | `/write-a-skill` | "write a skill", "create skill", "add skill", "new skill" |
+| Direct code change (test-first) | inline TDD → `/code-review-gate` | direct code ask outside a pipeline — "write this function", "implement this method", "add this helper", "quick implement"; write the failing test first (Red→Green→Refactor), then run `/code-review-gate` |
+| Gate + review after any code change | `/code-review-gate` | "gate and review", "pre-push check", "ready to push", "sign off my code", "check before PR", "done coding", "is my code ready", "review my changes" |
+| Stress-test a plan/design | `/grill-me` | "grill me", "challenge this", "stress-test", "poke holes", "pick this apart", "interview me about", "find gaps in my plan", "what am I missing", "red team this" |
+| Architectural health review | `/improve-codebase-architecture` | "improve architecture", "zoom out", "architectural review", "find coupling", "codebase health", "architectural debt", "tech debt audit", "refactor architecture" |
+| End-of-session handoff doc | `/handoff` | "handoff", "wrap up", "end session", "save context", "compact this session", "summarize for next session", "update progress", "done for today" |
+| Create a new skill | `/write-a-skill` | "write a skill", "create skill", "add skill", "new skill", "scaffold a skill" |
 
 **Rule**: If the user's message contains any trigger phrase above — or the intent clearly matches a row — invoke the skill first. Do not start writing code or analysis until the skill has been loaded. A task that "feels simple" is not an exception.
 
@@ -121,82 +121,7 @@ Use `TaskCreate` to track tasks with >1 step. Mark `in_progress` when starting, 
 | Vuln | `govulncheck ./...` | `npm audit --audit-level high` |
 | PR Review | Reviewdog in CI pipeline | Reviewdog in CI pipeline |
 
-> **Frontend additions** — React: `eslint-plugin-react-hooks` (0) + `eslint-plugin-jsx-a11y` + `@testing-library/react` ≥ 85% · Next.js: `next lint` + `tsc --noEmit` + `next build` + tests ≥ 85%
-
-## Go
-**Authority (in order)**: [Uber Go Style](https://github.com/uber-go/guide/blob/master/style.md) → [Ardan Labs/service](https://github.com/ardanlabs/service) → [JetBrains Go Modern](https://github.com/JetBrains/go-modern-guidelines) → Effective Go
-
-| Rule | Requirement |
-|------|-------------|
-| Errors | `fmt.Errorf("doing X: %w", err)` — never bare `return err`; **NEVER** `_ =` or `_ :=` to discard errors; handle every error |
-| Inspection | `errors.Is` / `errors.As` — never string-match errors |
-| Panics | Unrecoverable programmer errors only; **never** in library code |
-| Interfaces | Consumer package owns; single-method → `<Verb>er`; no embedding in exported structs |
-| Context | `ctx context.Context` always first parameter, named `ctx` |
-| Concurrency | Channels to communicate; mutexes only to serialize state access |
-| Goroutines | Documented owner + documented termination condition; `errgroup` for fan-out |
-| Types | Concrete or generics `[T any]` — never `interface{}` / `any` |
-| Zero values | Design types so zero value is safe and usable without constructor |
-| Layout | `cmd/` (main only) · `internal/` · `business/` · `foundation/` |
-| Tests | Table-driven; `go test -race ./...`; ≥85% line coverage |
-| Deps | Stdlib first; `go.uber.org/zap` · `testify` · `golang.org/x/sync` · `ardanlabs/conf/v3` |
-| No reflection | `reflect` only for serialization libraries with explicit justification |
-| Package names | Lowercase single word — no `utils` / `helpers` / `common` |
-| `init()` | Avoid unless truly unavoidable; never in library packages |
-
-## TypeScript
-| Rule | Requirement |
-|------|-------------|
-| Strict | `strict: true` in tsconfig; no `any` on public API or HTTP boundaries |
-| Validation | zod/joi at every HTTP boundary before processing request data |
-| Crypto | `crypto.randomBytes()` not `Math.random()`; Web Crypto API in browser |
-| Cookies | `httpOnly`, `secure`, `sameSite: strict` on all auth cookies |
-| OpenAPI | JSDoc `@swagger` blocks or NestJS decorators; must compile zero errors |
-| Tests | Jest + `@testing-library`; ≥85% line coverage |
-| Lint | `eslint-plugin-security` + `@typescript-eslint`; zero warnings |
-| GitHub API | Use `@octokit/rest` for all GitHub REST API integrations |
-
-## React
-| Rule | Requirement |
-|------|-------------|
-| Components | Functional only; hooks rules via `eslint-plugin-react-hooks` (zero violations) |
-| A11y | `eslint-plugin-jsx-a11y` — zero warnings; semantic HTML; no div-soup |
-| Testing | Vitest or Jest + `@testing-library/react`; no Enzyme; ≥ 85% line coverage |
-| State | Local state first; Context for shared; Zustand/Redux only when justified + documented |
-| Performance | No premature `memo`/`useMemo`/`useCallback` — profile first |
-| Tailwind | If `tailwind.config.*` present: utility classes only; `eslint-plugin-tailwindcss` class-order; no arbitrary values without justification |
-| Bundle | No heavy dep without bundle-size justification; tree-shaking enabled |
-| Security | No `dangerouslySetInnerHTML` with user data; sanitize via `DOMPurify` before render |
-
-## Next.js
-| Rule | Requirement |
-|------|-------------|
-| Router | App Router preferred for new projects; Pages Router only for legacy |
-| Components | Server Components by default; `'use client'` only when state/events required |
-| Data fetching | Server Components fetch data server-side; never expose server secrets to client |
-| Validation | zod/joi validation in Route Handlers + Server Actions before processing; `next-safe-action` for SA type safety |
-| Images | `next/image` for all images — no bare `<img>` tags |
-| Fonts | `next/font` for all custom fonts — no external font CDN requests |
-| Secrets | `NEXT_PUBLIC_*` only for intentionally public values; server-only vars never referenced in Client Components |
-| Security | `next/headers` for cookie/header access in Server Components; CSP via `next.config` headers |
-| Lint | `next lint` (eslint-config-next); zero warnings |
-| Build | `next build` must pass — catches SSR/hydration issues `tsc --noEmit` misses |
-| Testing | Vitest or Jest + `@testing-library/react`; Playwright for E2E; ≥ 85% coverage |
-| Bundle | Analyze with `@next/bundle-analyzer`; no unintentional client-side bloat |
-
-
-## HTML / CSS
-| Rule | Requirement |
-|------|-------------|
-| Semantic HTML | Use `<section>`, `<article>`, `<nav>`, `<header>`, `<footer>`, `<main>`, `<aside>` — no div-soup |
-| Accessibility | `lang` on `<html>`; `alt` on every `<img>`; `<label>` for every `<input>`; ARIA only when native semantics insufficient |
-| **Tailwind (preferred)** | Use Tailwind utility classes; `eslint-plugin-tailwindcss` for class-order; no arbitrary values without justification; design tokens via `tailwind.config.*` |
-| Vanilla CSS (when no Tailwind) | BEM naming or CSS Modules; CSS custom properties for design tokens; no `!important` unless justified; max 3 levels of nesting |
-| Responsive | Mobile-first: `min-width` breakpoints; no fixed-width layouts |
-| Performance | Animations use `transform`/`opacity` only (GPU-composited); no layout-triggering properties in loops |
-| No inline styles | No `style=""` attributes; exception: dynamic values set via JS only |
-| Linting | `stylelint` with `stylelint-config-standard`; zero warnings |
-| Validation | HTML must pass W3C validator (or `htmlhint`) with zero errors |
+> **Per-language standards** (Go · Java · JS/TS · PHP · Rust · React · Next.js · Flutter · HTMX · Kotlin · HTML/CSS) — full coding rules, linting commands, and review flags live in `references/language-rules-reference.md`. Load it on demand when coding that stack; don't inline it here. Coverage thresholds + gate commands: `references/quality-gate-reference.md`.
 
 ## Security Defaults (all languages)
 1. **Never read `.env` / `.envrc`** — these files may contain production secrets

@@ -47,7 +47,9 @@ Agent(
   subagent_type: "claude",
   model: "opus",
   prompt: """
-Read agents/coder.md — that is your persona and instructions.
+Read agents/coder.md (core) PLUS the tier overlay for the bug's stack —
+agents/coder-backend.md if the fix is server/API/domain, agents/coder-frontend.md if it is UI/SSR/client.
+Load only the language-rules-reference.md section for the affected language.
 
 SAM HANDOFF:
 [paste full SAM HANDOFF]

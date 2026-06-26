@@ -12,6 +12,7 @@ ID: STORY-{N} | Epic: {Epic Name} | Status: Ready for Dev
 
 ## Technical Context
 *(Extract only the architecture sections this story touches)*
+- **Tier**: Backend (server/API/domain/data/worker) · Frontend (UI/SSR/client/mobile) — picks the coder overlay. A story that needs both is split below.
 - **Components**: {components this story touches}
 - **Key interfaces**: {relevant signatures — copy verbatim from architecture in target language syntax}
 - **Data structures**: {relevant types — copy verbatim from architecture}
@@ -65,4 +66,6 @@ ID: STORY-{N} | Epic: {Epic Name} | Status: Ready for Dev
 - [ ] **If `api-spec.yaml` exists**: Spectral lint passes (`rtk npx @stoplight/spectral-cli lint api-spec.yaml --ruleset .spectral.yaml` — zero errors); all `operationId`(s) in scope implemented; no spec drift (annotations ↔ spec ↔ implementation aligned)
 ---
 
-Handoff: all story-{slug}.md → parallel Coder subagents (one per story). Each story is self-contained — Coder does not receive architecture.md. The verbatim interface/type/edge-case copies in Technical Context above are what make it self-contained; shallow Technical Context sections will cause Coder to produce incorrect implementations.
+**Full-stack split**: if a task needs both server and UI work, write it as TWO stories — a Backend story (Tier: Backend) and a Frontend story (Tier: Frontend) — that share the `api-spec.yaml` as their contract. The backend story is the spec **producer**; the frontend story is the **consumer**. This keeps each story single-tier, independently testable, and dispatchable to one coder overlay. Sequence: backend story first (makes the spec real), then frontend.
+
+Handoff: each story-{slug}.md → one Coder subagent, dispatched to its tier overlay (`coder-backend.md` or `coder-frontend.md`) per the story's **Tier** field. Each story is self-contained — Coder does not receive architecture.md. The verbatim interface/type/edge-case copies in Technical Context above are what make it self-contained; shallow Technical Context sections will cause Coder to produce incorrect implementations.

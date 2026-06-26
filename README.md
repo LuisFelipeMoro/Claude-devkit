@@ -242,8 +242,11 @@ PLANNING
 
 IMPLEMENTATION (per story — strict agent protocol, TDD)
   Amelia (Coder)      → failing test FIRST → impl → refactor (owns tests + code)  [emits CODER DONE]
+     stack-aware: shared core + backend OR frontend overlay (chosen by story Tier);
+     frontend overlay covers SSR/RSC; loads only the detected language's rules;
+     full-stack stories split BE/FE around the api-spec contract (BE producer, FE consumer)
         ↕ QA loop (max 3 iterations)
-  Quinn (QA)          → audits tests (intent, corner cases, no tautologies) + runs gates
+  Quinn (QA)          → audits tests (intent, corner cases, no tautologies) + runs gates  [one tier-aware auditor]
         │ gate fail   → QA→CODER BUG REPORT  → Amelia fixes → Quinn re-runs
         │ weak/missing test → QA→CODER TEST GAP → Amelia writes it → Quinn re-audits
         │ coverage gap → QA→CODER COVERAGE REQUEST → Amelia refactors
@@ -281,8 +284,8 @@ Exploring requirements only
 Fast path (one known task)
   → /task-coding-pipeline <task>       Architect → sub-tasks → code → QA → Verdict
 
-Ad-hoc code change (TDD, direct edit)
-  → /superpowers:test-driven-development
+Ad-hoc code change (test-first, direct edit)
+  → write the failing test first, then code  (Red → Green → Refactor)
          ↓ (mandatory final step)
   → /code-review-gate                  Gates + Reviewer on changed files
 ```

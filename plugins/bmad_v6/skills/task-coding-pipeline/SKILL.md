@@ -5,7 +5,7 @@ description: Use when given a single coding task to implement — skips planning
 
 Run BMAD v6 implementation pipeline (no planning phase). If no task provided, ask first.
 
-> **Model assignment** (see CLAUDE.md Model assignment table): dispatch Coder (Amelia) and Tuner on `opus`; Architect, Scrum Master, QA, Reviewer, Stress, Verdict, DevOps, and the orchestrator on `sonnet`; any read-only Explore/mapping sub-agent on `haiku`. Don't run exploration on opus or author code on haiku.
+> **Model assignment** (see CLAUDE.md Model assignment table): dispatch the Coder (core + backend/frontend overlay) and Tuner on `opus`; Architect, Scrum Master, QA, Reviewer, Stress, Verdict, DevOps, and the orchestrator on `sonnet`; any read-only Explore/mapping sub-agent on `haiku`. Don't run exploration on opus or author code on haiku.
 
 ## Phase 1 — Planning (once)
 
@@ -30,7 +30,8 @@ Load and follow `skills/planning.md` starting from **Phase 1 (Architecture)**.
 **A. Story** — `agents/scrum-master.md`
 Input: Task Manifest row + Architecture → Output: `story-{slug}.md`
 
-**B. Code (TDD)** — sub-agent with `agents/coder.md` + `story-{slug}.md`
+**B. Code (TDD)** — sub-agent with `agents/coder.md` (core) + ONE tier overlay + `story-{slug}.md`
+- **Stack-aware dispatch**: pick the overlay by the sub-task's Tier — `agents/coder-backend.md` (server/API/domain) or `agents/coder-frontend.md` (UI/SSR/client). Load only the `language-rules-reference.md` section for the sub-task's `Language` — never all. Full-stack sub-tasks were split BE/FE around the `api-spec.yaml` contract (BE producer first, then FE consumer). No frontend stack → frontend coder never spawned.
 - The story ACs + Definition of Done are the frozen acceptance contract — Coder satisfies it, never redefines it
 - Coder runs Phase 0 Analysis, then the Red→Green→Refactor cycle: failing test first, minimum impl, refactor — owns both test and impl files
 - Coder emits `CODER DONE` (with TDD evidence: RED → GREEN) when the cycle is complete
