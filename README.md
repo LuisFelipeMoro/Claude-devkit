@@ -281,8 +281,8 @@ Exploring requirements only
 Fast path (one known task)
   → /task-coding-pipeline <task>       Architect → sub-tasks → code → QA → Verdict
 
-Ad-hoc code change (TDD, direct edit)
-  → /superpowers:test-driven-development
+Ad-hoc code change (test-first, direct edit)
+  → write the failing test first, then code  (Red → Green → Refactor)
          ↓ (mandatory final step)
   → /code-review-gate                  Gates + Reviewer on changed files
 ```
