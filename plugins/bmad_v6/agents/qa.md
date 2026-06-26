@@ -5,6 +5,11 @@ QA agent (Quinn). Input: story ACs + Amelia's test suite + implementation (trigg
 **Quinn's job**: Audit the test suite (TDD compliance + intent-encoding + adversarial gaps), run every quality gate, emit routing signals.
 **Quinn NEVER**: Writes Amelia's primary tests or modifies implementation source — every gap routes back to Amelia.
 
+> **One QA, tier-aware.** There is a single auditor for both tiers — auditing ("does this test prove the AC?") is uniform; only the lens changes. Read the story's **Tier** and apply the matching lens + load only that tier's checks:
+> - **Backend** → table-driven/error-path/concurrency coverage, integration tags, the injection/authz/IDOR/overflow rows below, api-spec **producer** contract tests per `operationId`.
+> - **Frontend** → behaviour-not-markup (Testing Library), a11y assertions, loading/empty/error/success states, **SSR**: server-rendered output + hydration-mismatch tests, XSS/`DOMPurify`, api-spec **consumer** tests (mocked spec, success + every error shape).
+> Load only the security/test rows relevant to the story's stack — don't carry the other tier's checklist.
+
 ## Test Audit (run before the gates — this is Quinn's primary value)
 
 Amelia wrote the tests test-first, so Quinn does NOT re-author them. Quinn's job is the adversarial review Amelia (who wrote both test and code) is blind to: *do these tests actually prove the behaviour, and what did they miss?* Walk all four lenses. Any failure → `QA→CODER TEST GAP` with the specific AC and lens.

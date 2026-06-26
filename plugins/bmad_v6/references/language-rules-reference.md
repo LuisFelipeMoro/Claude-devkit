@@ -189,6 +189,28 @@ Functional components + hooks only; `eslint-plugin-react-hooks` zero violations;
 
 ---
 
+## Next.js
+
+### Coding Rules
+App Router for new projects (Pages Router only for legacy); Server Components by default, `'use client'` only when state/events required; fetch data server-side — never expose server secrets to the client; zod/joi validation in Route Handlers + Server Actions before processing (`next-safe-action` for Server Action type safety); `next/image` for all images (no bare `<img>`); `next/font` for custom fonts (no external font CDN); `NEXT_PUBLIC_*` only for intentionally public values; `next/headers` for cookie/header access in Server Components; CSP via `next.config` headers.
+
+### Linting Commands
+`next lint` (eslint-config-next) — zero warnings · `tsc --noEmit` · `next build` (catches SSR/hydration issues `tsc` misses) · tests via Vitest/Jest + `@testing-library/react`, Playwright for E2E
+
+### Review Flags *(required linters: `next lint`, `tsc --noEmit`, `next build`)*
+| Issue | Severity |
+|-------|----------|
+| Server secret referenced in a Client Component | CRITICAL |
+| `NEXT_PUBLIC_*` holding a secret value | CRITICAL |
+| No zod/joi validation in Route Handler / Server Action | MAJOR |
+| `'use client'` on a component with no state/events (needless client bloat) | MINOR |
+| Bare `<img>` instead of `next/image` | MINOR |
+| External font CDN instead of `next/font` | MINOR |
+| `next build` not run before handoff | MAJOR |
+| coverage < 85% | BLOCK (score ≤ 5) |
+
+---
+
 ## Flutter
 
 ### Coding Rules

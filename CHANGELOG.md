@@ -1,5 +1,45 @@
 # Changelog
 
+## [Unreleased] — Stack-aware coders, leaner context, self-dogfooding
+
+A follow-up pass focused on efficiency and specialization, on top of the TDD/Harness work below.
+
+### Specialized coders (shared core + thin overlays)
+The single Coder is now a shared TDD **core** plus one of two thin tier overlays, chosen by
+the story's tier:
+- **Backend** (`coder-backend`) — Go/Java/JS-TS/PHP/Rust/server-Kotlin; table-driven, integration,
+  race, security tests; api-spec **producer**.
+- **Frontend** (`coder-frontend`) — React/Next.js/HTMX/HTML-CSS/Flutter/Kotlin-Android; Testing
+  Library/Playwright, a11y, **SSR/RSC** (server render + hydration tests); api-spec **consumer**.
+
+Dispatch is **stack-aware**: the orchestrator spawns only the coder(s) the story needs (a
+backend-only repo never spawns a frontend coder), and each loads **only the detected
+language's** rules — never all of them. Full-stack stories are split BE/FE around the
+`api-spec.yaml` contract. QA stays a **single tier-aware auditor** — no agent sprawl.
+
+### Leaner, drift-free context
+- The two ~95%-identical `CLAUDE.md` files are deduped — the repo-root one now `@include`s the
+  canonical plugin copy. One source, no drift.
+- The heavy per-language standard tables left `CLAUDE.md` (loaded every session) and consolidated
+  into the single `language-rules-reference.md`, loaded on demand. `CLAUDE.md` is ~50% lighter.
+- Coverage thresholds now have one declared source of truth (`quality-gate-reference.md`).
+
+### External dependencies dropped
+- `superpowers:test-driven-development` reference removed — the Coder does TDD itself now; a
+  direct change writes the failing test first, then runs `/code-review-gate`. `superpowers:using-git-worktrees`
+  → native `git worktree`.
+- Skill-routing trigger phrases in both `CLAUDE.md` files broadened and modernized; `/rote`
+  (run) split from `/rote-adapter` (create).
+
+### Harness wiring & self-CI
+- Hooks now auto-install via the plugin manifest (`hooks/hooks.json`) — the SessionStart memory
+  hook and env-guard are active by default, not a manual settings paste.
+- The devkit dogfoods its own Sensors: a CI workflow runs shellcheck + bash syntax + JSON
+  validation on the toolkit itself.
+- All four plugins now carry a `version`.
+
+---
+
 ## [Unreleased] — TDD-first, Harness-strict overhaul
 
 This release rebuilds the devkit around two ideas: every line of code is driven by a

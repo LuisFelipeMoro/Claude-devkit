@@ -5,7 +5,7 @@ description: Use when running the full BMAD v6 agile pipeline for a large featur
 
 Run the BMAD v6 agile pipeline. If no task is provided, ask first.
 
-> **Model assignment** (see CLAUDE.md Model assignment table): dispatch Coder (Amelia) and Tuner on `opus`; Analyst, PM, Architect, Scrum Master, QA, Reviewer, Stress, Verdict, DevOps, and the orchestrator on `sonnet`; any read-only Explore/mapping sub-agent on `haiku`. Don't run exploration on opus or author code on haiku.
+> **Model assignment** (see CLAUDE.md Model assignment table): dispatch the Coder (core + backend/frontend overlay) and Tuner on `opus`; Analyst, PM, Architect, Scrum Master, QA, Reviewer, Stress, Verdict, DevOps, and the orchestrator on `sonnet`; any read-only Explore/mapping sub-agent on `haiku`. Don't run exploration on opus or author code on haiku.
 
 ---
 
@@ -28,7 +28,11 @@ Complete Phases 0–4 of the planning skill (Phase 5 is informational when invok
 - Output: one `story-{slug}.md` per task (scoped architecture sections only; include Security Points)
 
 **B. Parallel Coding (TDD)** — one subagent per story:
-- Each receives: `agents/coder.md` + `story-{slug}.md`
+- **Stack-aware dispatch**: each subagent gets `agents/coder.md` (core) + ONE tier overlay chosen by the story's Tier — `agents/coder-backend.md` (server/API/domain) or `agents/coder-frontend.md` (UI/SSR/client). Load only the `language-rules-reference.md` section for the story's `Language` — never all.
+  - Backend-only story → backend coder. Frontend-only → frontend coder.
+  - Full-stack story was already split by the ScrumMaster into BE + FE sub-stories sharing the `api-spec.yaml` contract (BE = producer, FE = consumer). Dispatch each to its tier coder; run BE first so the spec is real before FE consumes it.
+  - If the repo/plan has no frontend stack, the frontend coder is never spawned (zero overhead).
+- Each receives: `agents/coder.md` + the tier overlay + `story-{slug}.md`
 - The story ACs + Definition of Done are the frozen acceptance contract — Coder satisfies it, never redefines it
 - Coder runs Phase 0 Analysis, then Red→Green→Refactor: failing test first, minimum impl, refactor — owns both test and impl files
 - Coder emits `CODER DONE` (with TDD evidence: RED → GREEN) when the cycle is complete
