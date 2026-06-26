@@ -1,8 +1,10 @@
 # Changelog
 
-## [Unreleased] — Stack-aware coders, leaner context, self-dogfooding
+## [1.0.0] — 2026-06-26
 
-A follow-up pass focused on efficiency and specialization, on top of the TDD/Harness work below.
+First tagged release. It combines the TDD-first + Harness foundation with an
+efficiency/specialization pass (stack-aware coders, leaner context, self-dogfooding).
+Highlights below.
 
 ### Specialized coders (shared core + thin overlays)
 The single Coder is now a shared TDD **core** plus one of two thin tier overlays, chosen by
@@ -38,14 +40,11 @@ language's** rules — never all of them. Full-stack stories are split BE/FE aro
   validation on the toolkit itself.
 - All four plugins now carry a `version`.
 
----
+### TDD-first, Harness-strict foundation
 
-## [Unreleased] — TDD-first, Harness-strict overhaul
-
-This release rebuilds the devkit around two ideas: every line of code is driven by a
-test written *first*, and the whole toolkit behaves like a proper agentic **Harness**
-(Guides, Sensors, Memory, Orchestration). Here's what actually changed and why it
-matters day to day.
+Rebuilds the devkit around two ideas: every line of code is driven by a test written
+*first*, and the whole toolkit behaves like a proper agentic **Harness** (Guides, Sensors,
+Memory, Orchestration). Here's what changed and why it matters day to day.
 
 ### The big shift: tests come first now
 
