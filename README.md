@@ -1,14 +1,50 @@
 # claude-devkit
 
-BMAD v6 AI-assisted development pipeline for [Claude Code](https://claude.ai/code). Drop this into any repository under `.claude/` (or install globally in one command) to get a full agentic development kit: every piece of generated code passes through quality gates and a code reviewer before it's considered done.
+BMAD v6 AI-assisted development pipeline for [Claude Code](https://claude.ai/code). Drop this into any repository under `.claude/` (or install globally in one command) to get a full agentic development kit: every piece of code is driven test-first (Red → Green → Refactor) and clears quality gates plus an independent reviewer before it's considered done.
 
-- **11-agent coding pipeline** — Analyst → PM → Architect → ScrumMaster → Coder → QA → Reviewer → StressTester → Tuner → Verdict → DevOps
+- **Test-first by default** — the Coder writes a failing test before any implementation; the QA agent audits those tests instead of writing them. No code ships without a test that was red first.
+- **Harness-structured** — built on the four agentic-harness components: Guides (feed-forward context), Sensors (exit-code linters + test gates), Memory (cross-session `PROGRESS.md`), Orchestration (implementer ≠ validator, contract frozen before code).
+- **11-agent coding pipeline** — Analyst → PM → Architect → grill-me plan stress → ScrumMaster → Coder → QA → Reviewer → StressTester → Tuner → Verdict → DevOps
+- **Task-matched models** — `haiku` for read/explore, `sonnet` for plan/validate/long sessions, `opus` for writing code. Cheaper where it can be, stronger where it counts.
 - **Multi-language engineering standards** — Go, TypeScript, Java, PHP, Rust, React, Flutter, HTMX, Kotlin Android, HTML/CSS
 - **Security-first quality gates** — OWASP Web Top 10 + OWASP LLM Top 10 2025 enforced at every stage
 - **23 skills** (slash commands) — architecture, security review, DB migrations, observability, PR review, release management, and more
 - **Git hooks** — pre-commit (format + lint), pre-push (full gates), commit-msg (Conventional Commits)
-- **Claude Code hooks** — blocks `.env` reads; auto-reviews PR comments after every push
+- **Claude Code hooks** — resumes from `PROGRESS.md` at session start; blocks `.env` reads; auto-reviews PR comments after every push
 - **Integrated companion tools** — RTK (token savings), Caveman (compressed mode), Rote (adapter framework)
+
+---
+
+## How It Works — Harness + TDD
+
+This devkit is structured as an agentic **Harness** — four components that keep an
+autonomous agent on the rails:
+
+| Component | What it is here |
+|-----------|-----------------|
+| **Guides** (feed-forward) | `CLAUDE.md`, `architecture.md`, API specs, per-language standards — the right context injected before each task |
+| **Sensors** (feedback) | Linters in error-mode and test/coverage gates that return an exit code, not prose: `pre-commit` (format + lint), `pre-push` (tests + coverage ≥ 85% + vuln scan), mirrored in CI. A task isn't done until they pass. |
+| **Memory** | `PROGRESS.md` at the repo root (Done / Failed / Current State / Next). A `SessionStart` hook reads it so a new session resumes with context instead of starting blind. |
+| **Orchestration** | An orchestrator spawns isolated subagents with a pre-agreed contract. **Implementer ≠ validator** — the Coder builds, the QA/Reviewer/Stress agents validate. ACs + Definition of Done are frozen before any code. |
+
+### Test-Driven by construction
+
+Every code path is driven **test-first**:
+
+1. **Red** — the Coder (Amelia) writes the failing test for an acceptance criterion and confirms it fails for the right reason.
+2. **Green** — she writes the least code to make it pass.
+3. **Refactor** — she cleans up with the test staying green.
+
+The QA agent (Quinn) does **not** write these tests — she audits them. She checks every
+AC has a test, that tests assert real behaviour (catching tautological and over-mocked
+tests that can never fail), that corner cases are covered (boundaries, nulls, overflow,
+unicode, concurrency, time, error paths), and that no existing test was weakened to make
+a change pass. Missing or weak tests route back to the Coder via a `QA→CODER TEST GAP`
+signal.
+
+Plans are stress-tested with `/grill-me` **before** any code is written — gaps the
+requirements can answer get decided into the architecture; the rest are escalated to the
+human. Nothing ambiguous is deferred into the implementation.
 
 ---
 
