@@ -37,23 +37,23 @@ Show BUG REPORT and SAM HANDOFF to user before continuing.
 
 ## Phase 2 — Fix (Amelia sub-agent)
 
-Input: SAM HANDOFF from Phase 1.
+Input: SAM HANDOFF from Phase 1 (includes Sam's failing RED test).
 Output: `CODER DONE — BUGFIX COMPLETE` signal (see Agent Handoff Signals in `references/quality-gate-reference.md`).
-Boundary: implementation files only — never test files.
+Boundary: make Sam's RED test GREEN with the minimum fix. Amelia may ADD regression tests for edge cases the fix exposes; she must NOT weaken, delete, or rewrite an existing test to fit the fix.
 
 ```
 Agent(
   description: "Amelia — bug fix",
   subagent_type: "claude",
-  model: "sonnet",
+  model: "opus",
   prompt: """
 Read agents/coder.md — that is your persona and instructions.
 
 SAM HANDOFF:
 [paste full SAM HANDOFF]
 
-Fix implementation files only. Minimum change to fix root cause. Do not touch test files.
-Run the failing test after your fix to confirm GREEN.
+Minimum change to fix the root cause. Run Sam's failing test after your fix to confirm GREEN.
+You may ADD regression tests for edge cases the fix exposes; never weaken, delete, or rewrite an existing test to make it pass.
 
 Return ONLY: CODER DONE — BUGFIX COMPLETE — [file:line — what changed, one sentence]
 """

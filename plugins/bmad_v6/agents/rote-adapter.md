@@ -394,9 +394,11 @@ rote sensitivity upgrade
 rote sensitivity apply <id> --json
 ```
 
-### Phase 8: Verification
+### Phase 8: Verification (the acceptance test — define it BEFORE Phase 6)
 
 **Goal**: Confirm the adapter works end-to-end. ALL THREE steps must pass.
+
+> **Contract-first (TDD for a generator)**: Before running the Phase 6 create command, write down the acceptance test you expect to pass here — which read-only tool you will call and what a valid (non-error) response looks like. That predefined expectation is the adapter's "done" contract. The adapter is not complete until this exact test passes. Defining the expected result first stops you from rationalizing a broken adapter as working.
 
 **IMPORTANT**: Verification must run inside a workspace. If no workspace exists, create one first:
 
@@ -471,7 +473,7 @@ rote adapter catalog submit <id> --spec '<spec_url>'
 
 ## Rules
 
-1. Execute phases 1-8 in order. Never skip a phase.
+1. Execute phases 1-8 in order. Never skip a phase. Define the Phase 8 acceptance test (expected tool + valid response) before the Phase 6 create command — the adapter is done only when that predefined test passes.
 2. Never handle secrets. Always ask the user for credential values.
 3. Never create adapters with write access unless user explicitly confirms.
 4. Never proceed past a failed verification step. Report and wait.

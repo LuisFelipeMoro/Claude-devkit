@@ -5,17 +5,19 @@ description: Use when running the full BMAD v6 agile pipeline for a large featur
 
 Run the BMAD v6 agile pipeline. If no task is provided, ask first.
 
+> **Model assignment** (see CLAUDE.md Model assignment table): dispatch Coder (Amelia) and Tuner on `opus`; Analyst, PM, Architect, Scrum Master, QA, Reviewer, Stress, Verdict, DevOps, and the orchestrator on `sonnet`; any read-only Explore/mapping sub-agent on `haiku`. Don't run exploration on opus or author code on haiku.
+
 ---
 
 ## Phase 1 — Planning (once)
 
-Load and follow `skills/planning.md` (Phase 0 through Phase 3).
+Load and follow `skills/planning.md` (Phase 0 through Phase 4). Phase 2 (grill-me plan stress) and Phase 3 (human validation of unresolved questions) are mandatory before any coding.
 
 - If `product-brief.md` + `PRD.md` already exist (from a prior `/analysis` run): load them and skip Phase 0 (inline analysis).
 - If `architecture.md` already exists and was approved: skip Phases 0–2 and proceed directly to Phase 3 (Manifest).
 - On changes requested during human validation: update `architecture.md` → re-confirm before continuing.
 
-Complete Phases 0–3 of the planning skill (Phase 4 is informational when invoked from a pipeline). Once the **Epic Manifest** is confirmed, continue with Phase 2 below.
+Complete Phases 0–4 of the planning skill (Phase 5 is informational when invoked from a pipeline). The plan MUST clear the Phase 2 grill-me stress and Phase 3 human validation before any code. Once the **Epic Manifest** is confirmed, continue with Phase 2 below.
 
 ---
 
@@ -25,20 +27,21 @@ Complete Phases 0–3 of the planning skill (Phase 4 is informational when invok
 - Input: Epic Manifest rows for current epic + Architecture
 - Output: one `story-{slug}.md` per task (scoped architecture sections only; include Security Points)
 
-**B. Parallel Coding** — one subagent per story:
+**B. Parallel Coding (TDD)** — one subagent per story:
 - Each receives: `agents/coder.md` + `story-{slug}.md`
-- Coder runs Phase 0 Analysis before writing code (reads spec, explores existing patterns, drafts implementation proposal — mandatory)
-- Coder emits `CODER DONE` signal when implementation is ready for QA
-- Orchestrator stores compact ref: `"T1.1: {file}.{ext}, {N} lines, implements {Interface}"`
+- The story ACs + Definition of Done are the frozen acceptance contract — Coder satisfies it, never redefines it
+- Coder runs Phase 0 Analysis, then Red→Green→Refactor: failing test first, minimum impl, refactor — owns both test and impl files
+- Coder emits `CODER DONE` (with TDD evidence: RED → GREEN) when the cycle is complete
+- Orchestrator stores compact ref: `"T1.1: {file}.{ext} + tests, {N} lines, implements {Interface}"`
 
-**C. QA** — `agents/qa.md`
-- Input: ACs from Epic Manifest (including Security ACs) + full code
-- Must include ≥1 security test per Security AC
+**C. QA audit + gates** — `agents/qa.md`
+- Input: ACs from Epic Manifest (including Security ACs) + Amelia's tests + full code
+- Quinn audits the tests (intent-encoding, corner cases, no tautologies — see qa.md Test Audit), then runs all quality gates. Quinn authors no tests.
 
-Quinn runs tests and all quality gates. Route on Quinn's output signal:
+Route on Quinn's output signal:
 
 - `QA→REVIEWER APPROVAL` → proceed to D (Review + Stress in parallel)
-- `QA→CODER BUG REPORT` or `QA→CODER COVERAGE REQUEST` → Bug-Fix Loop
+- `QA→CODER BUG REPORT`, `QA→CODER TEST GAP`, or `QA→CODER COVERAGE REQUEST` → Bug-Fix Loop
 - `QA ESCALATION` (after 3 iterations) → proceed to D with FAIL status
 
 See `references/quality-gate-reference.md` **Bug-Fix Loop Protocol** for exact loop procedure, iteration counting, escalation format, and coverage failure sub-path.
@@ -67,6 +70,8 @@ If Reviewer or StressTester emits `TUNER REQUEST` → load `agents/tuner.md` (Ty
 | < 8.0 | Any | Show issues; ask: *"Fix and re-run / skip / stop?"* |
 
 On re-run: pass only the delta (CRITICAL/MAJOR issues + failing ACs).
+
+After each epic Verdict, append a `PROGRESS.md` entry at the repo root (Done / Failed / Current State / Next — see `references/progress-file.md`) so the next session boots with state.
 
 **Post-verdict (PRODUCTION READY on final epic only)**: load `agents/devops.md` (Ops) — generates Dockerfile, .dockerignore, docker-compose.yml, optional CI/k8s.
 

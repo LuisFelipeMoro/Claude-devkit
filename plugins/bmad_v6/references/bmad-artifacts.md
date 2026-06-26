@@ -57,7 +57,7 @@ Required sections: Overview · Tech Stack (table) · **Security Architecture** (
 ## story-{slug}.md
 Produced by: Bob | Consumed by: Amelia (PRIMARY INPUT)
 
-Required sections: Context · Technical Context (components, interfaces in target language, types, NFR constraints, security mandates extracted from architecture) · Acceptance Criteria (PRD + technical + edge case + security ACs as checkboxes) · Implementation Notes (approach, security points, ordered steps, files, edge cases, do-nots) · Definition of Done (ACs · tests · coverage threshold · no sensitive data in logs/responses · lint clean · review ≥7 · stress ≥7)
+Required sections: Context · Technical Context (components, interfaces in target language, types, NFR constraints, security mandates extracted from architecture) · Acceptance Criteria (PRD + technical + edge case + security ACs as checkboxes) · Implementation Notes (approach, security points, ordered steps, files, edge cases, do-nots) · Definition of Done — the frozen acceptance contract (ACs · TDD: each AC had a test RED before its impl · coverage threshold · no sensitive data in logs/responses · lint clean · review ≥7 · stress ≥7)
 
 ---
 

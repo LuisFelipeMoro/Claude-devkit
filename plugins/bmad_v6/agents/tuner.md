@@ -13,7 +13,7 @@ Tuner agent (Tyler). Input: TUNER REQUEST from Reviewer or StressTester — list
 ### What Tyler does NOT handle
 - `[CRITICAL]` or `[MAJOR]` findings → route to Amelia (Coder)
 - Failing quality gates → route to Amelia (Coder)
-- Test changes of any kind → Quinn owns tests
+- Test changes of any kind → Amelia owns tests (TDD)
 - Architectural changes → Winston (Architect)
 
 ---
@@ -43,7 +43,8 @@ If score < 7 or CRITICAL/MAJOR findings exist, do NOT route to Tyler — route t
 2. Reject any finding that is CRITICAL/MAJOR — emit `TUNER SKIP: [finding] — routes to Amelia`
 3. Apply changes surgically: only the exact lines identified, no surrounding refactors
 4. Run the relevant linter for each changed file — confirm zero new violations introduced
-5. Emit TUNER COMPLETE
+5. Run the existing test suite — confirm it stays GREEN (a tuning change that breaks a test is out of scope → route to Amelia)
+6. Emit TUNER COMPLETE
 
 ---
 

@@ -5,6 +5,8 @@ description: Use when given a single coding task to implement — skips planning
 
 Run BMAD v6 implementation pipeline (no planning phase). If no task provided, ask first.
 
+> **Model assignment** (see CLAUDE.md Model assignment table): dispatch Coder (Amelia) and Tuner on `opus`; Architect, Scrum Master, QA, Reviewer, Stress, Verdict, DevOps, and the orchestrator on `sonnet`; any read-only Explore/mapping sub-agent on `haiku`. Don't run exploration on opus or author code on haiku.
+
 ## Phase 1 — Planning (once)
 
 > **Backend-Driven Architecture check (mandatory):** Verify tier placement for every component: **Frontend** = render only; **BFF** = orchestrate + shape for UI; **Core** = domain logic. Flag and push back on any AC asking the wrong tier to own logic.
@@ -13,7 +15,8 @@ Load and follow `skills/planning.md` starting from **Phase 1 (Architecture)**.
 
 - Skip Phase 0 — task description is the input; Brief + PRD not required.
 - Derive tech stack from existing codebase if present.
-- Produce **Task Manifest** (Phase 3 single-task path). Confirm before continuing.
+- Phase 2 (grill-me plan stress) and Phase 3 (human validation of unresolved questions) are mandatory before any coding.
+- Produce **Task Manifest** (Phase 4 single-task path). Confirm before continuing.
 
 **Sub-task sizing rules:**
 - Max ~200 lines of production code per sub-task
@@ -27,19 +30,18 @@ Load and follow `skills/planning.md` starting from **Phase 1 (Architecture)**.
 **A. Story** — `agents/scrum-master.md`
 Input: Task Manifest row + Architecture → Output: `story-{slug}.md`
 
-**B. Code** — sub-agent with `agents/coder.md` + `story-{slug}.md`
-- Coder runs Phase 0 Analysis before writing code (reads spec, explores patterns, drafts plan)
-- Coder emits `CODER DONE` signal when implementation is ready for QA
-- Orchestrator stores compact ref: `"ST1: {file}.{ext}, {N} lines, implements {Interface}"`
+**B. Code (TDD)** — sub-agent with `agents/coder.md` + `story-{slug}.md`
+- The story ACs + Definition of Done are the frozen acceptance contract — Coder satisfies it, never redefines it
+- Coder runs Phase 0 Analysis, then the Red→Green→Refactor cycle: failing test first, minimum impl, refactor — owns both test and impl files
+- Coder emits `CODER DONE` (with TDD evidence: RED → GREEN) when the cycle is complete
+- Orchestrator stores compact ref: `"ST1: {file}.{ext} + tests, {N} lines, implements {Interface}"`
 
-**C. QA** — `agents/qa.md`
-Input: ACs from Task Manifest (including Security ACs) + full code
-Must include ≥1 security test per Security AC
-
-Quinn runs tests and all quality gates. Route on Quinn's output signal:
+**C. QA audit + gates** — `agents/qa.md`
+Input: ACs from Task Manifest (including Security ACs) + Amelia's tests + full code
+Quinn audits the tests (intent-encoding, corner cases, no tautologies — see qa.md Test Audit), then runs all quality gates. Quinn authors no tests. Route on Quinn's output signal:
 
 - `QA→REVIEWER APPROVAL` → proceed to D (Review + Stress in parallel)
-- `QA→CODER BUG REPORT` or `QA→CODER COVERAGE REQUEST` → Bug-Fix Loop
+- `QA→CODER BUG REPORT`, `QA→CODER TEST GAP`, or `QA→CODER COVERAGE REQUEST` → Bug-Fix Loop
 - `QA ESCALATION` (after 3 iterations) → proceed to D with FAIL status
 
 See `references/quality-gate-reference.md` **Bug-Fix Loop Protocol** for exact procedure, iteration counting, and coverage failure sub-path.
@@ -66,6 +68,8 @@ Unmitigated CRITICAL security = automatic NOT READY.
 | < 8.0 | Any | Any | Show issues; ask: *"Fix and re-run / skip / stop?"* |
 
 On re-run: pass only delta (CRITICAL/MAJOR issues + failing ACs + failed gates).
+
+After each sub-task Verdict, append a `PROGRESS.md` entry at the repo root (Done / Failed / Current State / Next — see `references/progress-file.md`) so the next session boots with state.
 
 **Post-verdict (PRODUCTION READY)**: load `agents/devops.md` (Ops) — generates Dockerfile, .dockerignore, docker-compose.yml, optional CI/k8s.
 

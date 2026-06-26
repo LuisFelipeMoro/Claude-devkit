@@ -83,9 +83,9 @@ See `references/spec-driven-reference.md` for `.spectral.yaml` template, annotat
 
 *Shared by task-coding-pipeline, multi-agent-coding-pipeline, and bug-fix. Reference this section — do not copy-paste.*
 
-**Trigger**: Any quality gate FAILS after QA writes tests.
+**Trigger**: Any quality gate FAILS, or Quinn's audit finds a missing/weak test, after `CODER DONE`.
 
-**Rule**: Only Amelia (Coder) touches implementation. Only Quinn (QA) touches test files. No exceptions.
+**Rule**: Tests are written RED-first, before the implementation they cover. Amelia (Coder) owns BOTH the tests and the implementation; Quinn (QA) audits and runs gates but authors no tests. No exceptions.
 
 **Loop (max 3 iterations)**:
 
@@ -100,7 +100,7 @@ See `references/spec-driven-reference.md` for `.spectral.yaml` template, annotat
    Gate: [which gate failed — lint / race / coverage / test]
    Classification: LOGIC | TYPING | CONCURRENCY | SECURITY | PERFORMANCE
    ```
-2. Pipeline routes BUG REPORT to Amelia — Amelia fixes implementation ONLY.
+2. Pipeline routes BUG REPORT to Amelia — Amelia writes a failing test reproducing the bug (RED) if absent, then fixes implementation to GREEN.
 3. Amelia emits `CODER DONE — BUGFIX [N]: [one-line description]` (N = iteration number).
 4. Quinn re-runs ALL quality gates from scratch.
 5. Repeat until PASS or max iterations reached.
@@ -113,11 +113,17 @@ Routing to Reviewer with FAIL status.
 ```
 Reviewer receives the FAIL-status artifact and scores accordingly.
 
+**Test-gap sub-path** (an AC lacks a real test — caught by Quinn's audit):
+
+- Quinn emits `QA→CODER TEST GAP` (the AC + why the existing test is missing/weak).
+- Amelia writes the failing test (RED) then the minimum code for GREEN; emits `BUGFIX COMPLETE`.
+- Quinn re-audits and re-runs gates (counts as one bug-fix iteration).
+
 **Coverage failure sub-path** (distinct from bug failures):
 
-If coverage < threshold AND Quinn can write more tests:
-- Quinn writes additional tests to cover the uncovered paths
-- Quinn re-runs coverage gate (does NOT count as a bug-fix iteration)
+If coverage < threshold AND uncovered paths are reachable behaviour with no test:
+- Quinn emits `QA→CODER TEST GAP` — Amelia adds the failing test, then the code.
+- Quinn re-runs coverage gate.
 
 If coverage < threshold AND uncovered paths are dead code or framework-generated:
 - Quinn emits `QA→CODER COVERAGE REQUEST`:
@@ -139,9 +145,10 @@ If coverage < threshold AND uncovered paths are dead code or framework-generated
 
 | Signal | Emitted by | Meaning | Pipeline action |
 |--------|-----------|---------|-----------------|
-| `CODER DONE` | Coder (Amelia) | Implementation complete, ready for QA | Route to Quinn |
-| `QA→REVIEWER APPROVAL` | QA (Quinn) | All gates green, coverage met | Route to Reviewer (and Stress in parallel) |
+| `CODER DONE` | Coder (Amelia) | Tests-first cycle complete, ready for QA audit | Route to Quinn |
+| `QA→REVIEWER APPROVAL` | QA (Quinn) | Audit passed, all gates green, coverage met | Route to Reviewer (and Stress in parallel) |
 | `QA→CODER BUG REPORT` | QA (Quinn) | Gate failed — implementation bug | Route to Amelia (count iteration) |
+| `QA→CODER TEST GAP` | QA (Quinn) | AC lacks a real test, or test is tautological/over-mocked | Route to Amelia (count iteration) |
 | `QA→CODER COVERAGE REQUEST` | QA (Quinn) | Coverage below threshold, implementation refactor needed | Route to Amelia (count iteration) |
 | `QA ESCALATION` | QA (Quinn) | 3 iterations failed | Route to Reviewer with FAIL status |
 | `BUGFIX COMPLETE` | Coder (Amelia) | Bug fix applied after QA report | Quinn re-runs gates |

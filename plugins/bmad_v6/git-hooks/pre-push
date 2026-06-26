@@ -1,5 +1,8 @@
 #!/bin/bash
-# Pre-push: full quality gates — tests + race + coverage + vulnerability scan
+# Pre-push: full quality gates — tests + race + coverage + vulnerability scan.
+# Harness Sensor: this is the mandatory test-runner gate. It exits non-zero when
+# tests fail or coverage drops below threshold — a task is not "done" until this
+# passes. It returns an exit code, never prose for an agent to interpret.
 set -e
 
 echo "→ Full quality gates before push..."

@@ -1,5 +1,8 @@
 #!/bin/bash
-# Pre-commit: fast quality gates — format + lint only (no tests, target <5s)
+# Pre-commit: fast quality gates — format + lint only (no tests, target <5s).
+# Harness Sensor: linters run in ERROR mode and this hook exits non-zero on any
+# violation — a failing rule blocks the commit. It returns an exit code, never
+# prose for an agent to interpret.
 set -e
 
 # Go

@@ -114,7 +114,7 @@ Do NOT emit SAM HANDOFF until RED is confirmed.
 ```
 ## SAM HANDOFF
 Root cause:   [one sentence]
-Fix scope:    [files to change — implementation only, never test files]
+Fix scope:    [impl files to change; Amelia may add regression tests but must not weaken/rewrite this RED test]
 Test file:    [path/to/test_file]
 Test name:    [test function or describe/it name]
 Constraints:  [invariants Amelia must not break]

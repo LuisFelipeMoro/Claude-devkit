@@ -28,12 +28,12 @@ Scrum Master (Bob)
   └─ story references operationId(s) from spec
        ↓
 Coder (Amelia)
-  └─ Phase 0 reads api-spec.yaml → implements to spec exactly
-  └─ Annotations match spec (not vice versa)
+  └─ Phase 0 reads api-spec.yaml → writes failing contract tests first (status, schema, auth)
+  └─ Implements to spec exactly until those tests pass; annotations match spec (not vice versa)
        ↓
 QA (Quinn)
-  └─ Spectral lint: spec quality gate
-  └─ Schema validation: response shapes match spec
+  └─ Audits the contract tests exist per operationId (else QA→CODER TEST GAP)
+  └─ Spectral lint: spec quality gate · Schema validation: response shapes match spec
        ↓
 Reviewer
   └─ Spec drift check: annotations ↔ spec ↔ implementation alignment

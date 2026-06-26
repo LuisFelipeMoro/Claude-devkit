@@ -51,3 +51,5 @@ Offer: "Want to stress-test any finding? Type `/grill-me` with the finding."
 
 For each Critical/High finding the user wants to address: offer `docs/adr/ADR-NNN-title.md`.
 See `references/arch-report-reference.md` for ADR template.
+
+> **Refactor guard**: this skill only reports — but any refactor that follows must be protected by a characterization test first. Pin the current observable behaviour with a passing test (it goes RED the moment the refactor changes behaviour), then refactor under green. Never restructure code that has no test covering it — add the test first.

@@ -50,7 +50,9 @@ ID: STORY-{N} | Epic: {Epic Name} | Status: Ready for Dev
 - Do not implement {feature X} — that's STORY-{M}
 
 ## Definition of Done
+*(This list is the frozen acceptance contract — agreed before any code is written. Amelia satisfies it via TDD; she does not redefine it.)*
 - [ ] All ACs pass
+- [ ] TDD followed — each AC + security AC had a test written and observed RED before its implementation
 - [ ] Unit tests for every exported function / public method
 - [ ] Security ACs verified — no OWASP Top 10 violations in scope
 - [ ] Lint clean (zero errors): Go — `go vet`, `staticcheck`, `golangci-lint`; Java — `checkstyle`, `SpotBugs`, `PMD`; JS/TS — `eslint --max-warnings 0`, `prettier --check`; PHP — `phpstan` level 8, `phpcs`, `php-cs-fixer`; Rust — `cargo clippy -D warnings`, `cargo fmt --check`, `cargo audit`

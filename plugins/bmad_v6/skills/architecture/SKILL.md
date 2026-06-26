@@ -37,6 +37,7 @@ Per component:
 - **Interface** (language-idiomatic — Go `interface`, TS `interface`, etc.)
 - **Responsibility** (one sentence — if more is needed, split the component)
 - **Dependencies** (what it calls; direction must flow inward)
+- **Testable seam** (how it is driven test-first: dependencies behind interfaces, I/O injectable/mockable, pure logic separable from side effects — so a failing test can be written before the implementation)
 
 Clean Architecture layers (outermost → innermost):
 `transport` → `application` → `domain` ← `infrastructure`
@@ -73,5 +74,7 @@ Key metrics, log events, trace spans to instrument.
 - Security section is mandatory — never skip
 - Every ADR requires a "Rejected alternatives" entry
 - Component >~200 lines → it has too many responsibilities → split it
+- Every component must expose a testable seam — untestable designs are rejected
 - Mermaid diagram must compile without errors
+- Before any code is written against this design, stress it with `/grill-me`; decide every gap the requirements support, escalate the rest to the human — never defer an open question into implementation
 - Use context7 to verify any library version, API shape, or framework behavior before specifying it

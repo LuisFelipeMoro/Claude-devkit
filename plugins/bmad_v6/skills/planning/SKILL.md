@@ -44,14 +44,25 @@ Show: `✓ architecture.md`
 
 ---
 
-## Phase 2 — Human Validation
+## Phase 2 — Stress the Plan (grill-me — MANDATORY before any code)
+
+Every plan is stress-tested before coding. Load `/grill-me` and grill the architecture + manifest: missing error cases, auth gaps, schema problems, undecided edge cases, unowned failure modes. The goal is to surface and **close gaps now**, while changes are cheap — not at code time.
+
+For each gap grill-me raises:
+- If the requirements (Brief/PRD/architecture) support a decision → **decide it and write it into `architecture.md`**. A question the plan should have answered but didn't is a planning error — fix the plan, do not defer it to the coder.
+- If it cannot be decided from the available context → carry it to Phase 3 as an explicit open question for the human.
+
+Re-run grill-me until it raises no new gaps the plan can resolve on its own.
+
+## Phase 3 — Human Validation
 
 Present to user:
 - Mermaid diagram(s)
 - Tech stack decisions
 - Top ADRs and tradeoffs
+- **Open questions grill-me could not resolve from context** — ask the human to decide each before coding
 
-Ask: *"Does the architecture make sense? Any changes to libraries, strategies, or design? Approve / request changes?"*
+Ask: *"Does the architecture make sense? Any changes to libraries, strategies, or design? Please resolve the open questions above. Approve / request changes?"*
 
 On changes → update `architecture.md` → re-confirm before continuing.
 
@@ -64,15 +75,15 @@ Present the API contract summary:
 
 Ask: *"Does the API contract look right? Any changes to endpoints, schemas, auth, or error shapes before implementation starts? Once approved, Coder implements to this spec exactly — changes after that require updating the spec first."*
 
-Offer: *"Use `/grill-me` to stress-test the API design before committing — catches missing error cases, auth gaps, and schema problems before any code is written."*
+The API contract was already stressed in Phase 2 (grill-me) — confirm those findings are reflected in the spec.
 
 On spec changes → update `api-spec.yaml` → run `rtk npx @stoplight/spectral-cli lint api-spec.yaml --ruleset .spectral.yaml` → re-confirm before continuing.
 
-**Do not proceed to Phase 3 (Manifest) until both `architecture.md` and `api-spec.yaml` (if present) are approved.**
+**Do not proceed to Phase 4 (Manifest) until both `architecture.md` and `api-spec.yaml` (if present) are approved and all open questions resolved.**
 
 ---
 
-## Phase 3 — Manifest
+## Phase 4 — Manifest
 
 Determine scope from the PRD epic count:
 
@@ -90,13 +101,15 @@ Determine scope from the PRD epic count:
 
 `Language` must be populated from the Architect's Tech Stack decision — carries runtime, version, and framework (e.g. `Go 1.26.2`, `TypeScript 5 / Next.js 14`, `Java 21 / Spring Boot 3`). Every downstream agent reads Language from the Manifest — never inferred.
 
+Each task/sub-task must be **independently testable** — expressible as one or more failing tests written before its implementation. If a row cannot be stated as a test-first unit, split it until it can.
+
 Write to: `epic-manifest.md` or `task-manifest.md` at project root.
 
 Show: `✓ epic-manifest` or `✓ task-manifest`
 
 ---
 
-## Phase 4 — Plan Summary
+## Phase 5 — Plan Summary
 
 > *(When invoked from `/multi-agent-coding-pipeline` or `/task-coding-pipeline`, this phase is informational only — print the summary, do NOT halt, let the pipeline orchestrator continue.)*
 
