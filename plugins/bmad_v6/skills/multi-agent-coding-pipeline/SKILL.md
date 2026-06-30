@@ -1,6 +1,6 @@
 ---
 name: multi-agent-coding-pipeline
-description: Use when running the full BMAD v6 agile pipeline for a large feature or epic. Runs all 9 agents: Analyst → PM → Architect → ScrumMaster → Coder → QA → Reviewer → StressTester → Verdict.
+description: Use when running the full BMAD v6 agile pipeline for a large feature or epic — runs all 9 agents (Analyst, PM, Architect, ScrumMaster, Coder, QA, Reviewer, StressTester, Verdict) from planning through verdict. Trigger phrases — "build", "new feature", "epic", "implement from scratch", "greenfield", "MVP".
 ---
 
 Run the BMAD v6 agile pipeline. If no task is provided, ask first.

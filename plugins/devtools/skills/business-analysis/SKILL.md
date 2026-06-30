@@ -1,11 +1,17 @@
 ---
 name: business-analysis
-description: Use when mapping business rules, constraints, and presentation logic of a domain. Produces user capability map, validation rules, presentation rules, and external integrations in Brazilian Portuguese.
+description: 'Use when mapping business rules, constraints, and presentation logic of a domain. Produces user capability map, validation rules, presentation rules, and external integrations in Brazilian Portuguese.'
 ---
 
 # Business Analysis
 
 Act as a Product Manager and Technical Writer. Map the business rules, constraints, and presentation logic of a domain.
+
+## Rules
+- Output in Brazilian Portuguese
+- No implementation details — business rules only
+- Every validation must include the user-facing error message
+- Implicit rules: mark as `[IMPLÍCITO]`
 
 ## Invocation
 `/business-analysis [domain]`
@@ -26,9 +32,3 @@ Currency formatting, date formats, conditional rendering, calculated fields, sor
 
 ### 4. External Integrations
 Per integration: system name · data in/out · when called · failure behavior.
-
-## Rules
-- Output in Brazilian Portuguese
-- No implementation details — business rules only
-- Every validation must include the user-facing error message
-- Implicit rules: mark as `[IMPLÍCITO]`

@@ -3,82 +3,24 @@ name: task-coding-pipeline
 description: Use when given a single coding task to implement — skips planning, runs Architecture then decomposes into independently-testable sub-tasks, coding, QA with quality gates, review, stress testing, and verdict per sub-task.
 ---
 
-Run BMAD v6 implementation pipeline (no planning phase). If no task provided, ask first.
+Run the BMAD v6 implementation pipeline (no planning phase). If no task is provided, ask first.
+Load agent files on demand — never pre-load all at once; use `references/output-format.md` headers and show a Pipeline Summary after each Verdict.
 
-> **Model assignment** (see CLAUDE.md Model assignment table): dispatch the Coder (core + backend/frontend overlay) and Tuner on `opus`; Architect, Scrum Master, QA, Reviewer, Stress, Verdict, DevOps, and the orchestrator on `sonnet`; any read-only Explore/mapping sub-agent on `haiku`. Don't run exploration on opus or author code on haiku.
+Behavior contract: [skill.spec.yml](skill.spec.yml) · dependency ledger: [deps.toml](deps.toml) · full sub-task loop detail: [references/loop.md](references/loop.md).
 
-## Phase 1 — Planning (once)
+## Contract
 
-> **Backend-Driven Architecture check (mandatory):** Verify tier placement for every component: **Frontend** = render only; **BFF** = orchestrate + shape for UI; **Core** = domain logic. Flag and push back on any AC asking the wrong tier to own logic.
+- **Input**: a single coding task (tech stack derived from the existing codebase if present).
+- **Output**: implemented, tested sub-tasks, each with a Verdict and a `PROGRESS.md` entry at repo root.
+- **Boundary**: no full planning phase — starts at Architecture; per sub-task max ~200 lines with a clear interface boundary, split if not independently testable.
+- **Rules**: Coder owns tests + implementation test-first; story ACs are the frozen acceptance contract; Reviewer and StressTester run only after QA approval or escalation; unmitigated CRITICAL security is automatic NOT READY. Full forbids in [skill.spec.yml](skill.spec.yml).
 
-Load and follow `skills/planning.md` starting from **Phase 1 (Architecture)**.
+## Model assignment
 
-- Skip Phase 0 — task description is the input; Brief + PRD not required.
-- Derive tech stack from existing codebase if present.
-- Phase 2 (grill-me plan stress) and Phase 3 (human validation of unresolved questions) are mandatory before any coding.
-- Produce **Task Manifest** (Phase 4 single-task path). Confirm before continuing.
+Dispatch the Coder (core + backend/frontend overlay) and Tuner on `opus`; Architect, Scrum Master, QA, Reviewer, Stress, Verdict, DevOps, and the orchestrator on `sonnet`; any read-side Explore/mapping sub-agent on `haiku` (see CLAUDE.md Model assignment table).
 
-**Sub-task sizing rules:**
-- Max ~200 lines of production code per sub-task
-- Each sub-task has a clear interface boundary (function, class, module, endpoint)
-- Sub-tasks must be independently testable — split if not
+## Steps
 
----
-
-## Phase 2 — Sub-Task Loop (repeat per sub-task)
-
-**A. Story** — `agents/scrum-master.md`
-Input: Task Manifest row + Architecture → Output: `story-{slug}.md`
-
-**B. Code (TDD)** — sub-agent with `agents/coder.md` (core) + ONE tier overlay + `story-{slug}.md`
-- **Stack-aware dispatch**: pick the overlay by the sub-task's Tier — `agents/coder-backend.md` (server/API/domain) or `agents/coder-frontend.md` (UI/SSR/client). Load only the `language-rules-reference.md` section for the sub-task's `Language` — never all. Full-stack sub-tasks were split BE/FE around the `api-spec.yaml` contract (BE producer first, then FE consumer). No frontend stack → frontend coder never spawned.
-- The story ACs + Definition of Done are the frozen acceptance contract — Coder satisfies it, never redefines it
-- Coder runs Phase 0 Analysis, then the Red→Green→Refactor cycle: failing test first, minimum impl, refactor — owns both test and impl files
-- Coder emits `CODER DONE` (with TDD evidence: RED → GREEN) when the cycle is complete
-- Orchestrator stores compact ref: `"ST1: {file}.{ext} + tests, {N} lines, implements {Interface}"`
-
-**C. QA audit + gates** — `agents/qa.md`
-Input: ACs from Task Manifest (including Security ACs) + Amelia's tests + full code
-Quinn audits the tests (intent-encoding, corner cases, no tautologies — see qa.md Test Audit), then runs all quality gates. Quinn authors no tests. Route on Quinn's output signal:
-
-- `QA→REVIEWER APPROVAL` → proceed to D (Review + Stress in parallel)
-- `QA→CODER BUG REPORT`, `QA→CODER TEST GAP`, or `QA→CODER COVERAGE REQUEST` → Bug-Fix Loop
-- `QA ESCALATION` (after 3 iterations) → proceed to D with FAIL status
-
-See `references/quality-gate-reference.md` **Bug-Fix Loop Protocol** for exact procedure, iteration counting, and coverage failure sub-path.
-
-**D. Review + Stress** *(triggered by QA signal — never before QA approval or escalation)*:
-- `agents/reviewer.md` → full code, language-specific checks
-- `agents/stress.md` → full code + tests, Security Under Stress
-
-If Reviewer or StressTester emits `TUNER REQUEST` → load `agents/tuner.md` (Tyler):
-- Tyler applies MINOR/NIT fixes; emits `TUNER COMPLETE`
-- Reviewer re-scores only changed files; use higher score for Verdict
-- Maximum 2 iterations; on `TUNER LIMIT REACHED` → proceed to E
-
-**E. Verdict** — `agents/verdict.md`
-Input: Review score + Stress score + QA summary + AC checklist + Gate Report
-Unmitigated CRITICAL security = automatic NOT READY.
-
-**F. Checkpoint**
-
-| Score | Security | Gates | Action |
-|-------|----------|-------|--------|
-| ≥ 8.0 | No CRITICAL | All green | Next sub-task or final summary |
-| ≥ 8.0 | CRITICAL | Any | NOT READY — fix security first |
-| < 8.0 | Any | Any | Show issues; ask: *"Fix and re-run / skip / stop?"* |
-
-On re-run: pass only delta (CRITICAL/MAJOR issues + failing ACs + failed gates).
-
-After each sub-task Verdict, append a `PROGRESS.md` entry at the repo root (Done / Failed / Current State / Next — see `references/progress-file.md`) so the next session boots with state.
-
-**Post-verdict (PRODUCTION READY)**: load `agents/devops.md` (Ops) — generates Dockerfile, .dockerignore, docker-compose.yml, optional CI/k8s.
-
-> **Context Budget**: After each sub-task: drop code + story. Retain: Architecture + Manifest + all scores.
-> If running 4+ sub-tasks or context >75% full: summarize completed sub-tasks to one-line refs:
-> `"ST{N}: {slug} — DONE (Review: X/10, Stress: Y/10, QA: Z/10)"` — never drop scores.
-
----
-
-Use `references/output-format.md` headers. Show Pipeline Summary after each Verdict.
-Load agent files on demand — never pre-load all at once.
+1. **Planning (once)** — follow `skills/planning.md` from **Phase 1 (Architecture)**; run the Backend-Driven Architecture tier check; produce and confirm a **Task Manifest** (sizing rules and tier check detail in [references/loop.md](references/loop.md)).
+2. **Sub-task loop** — repeat per sub-task: **A** story (ScrumMaster) → **B** code TDD (Coder + one tier overlay) → **C** QA audit + gates → **D** review + stress (after the QA signal) → **E** verdict → **F** checkpoint + `PROGRESS.md`. Exact dispatch, routing signals, Bug-Fix Loop, Tuner limits, checkpoint table, and context budget are in [references/loop.md](references/loop.md).
+3. **Finish** — when a sub-task is PRODUCTION READY, load `agents/devops.md` for Docker/CI artifacts; otherwise continue to the next sub-task or print the final summary.

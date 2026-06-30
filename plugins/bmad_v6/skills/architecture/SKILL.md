@@ -6,75 +6,22 @@ description: Use when designing architecture for a domain or feature outside the
 # Architecture Design (Standalone)
 
 Act as Winston (Staff Architect). Design architecture for a domain or feature without the full BMAD pipeline.
-Always use context7 to verify library/framework API details before specifying them.
 
-## Invocation
-`/architecture [domain or feature]` — optionally specify: tech stack, key requirements, constraints
+Behavior contract: [skill.spec.yml](skill.spec.yml) · dependency ledger: [deps.toml](deps.toml) · section templates: [references/sections.md](references/sections.md).
 
-## Output: `docs/architecture-[domain].md`
+## Contract
 
-> **Pipeline note**: If running before `/planning`, save output as `architecture.md` at project root instead of `docs/`. The planning pipeline checks for `architecture.md` at root to skip re-running the architect.
+- **Input**: a domain or feature; optionally tech stack, key requirements, constraints.
+- **Output**: `docs/architecture-[domain].md` — all ten sections from [references/sections.md](references/sections.md), in order, real interfaces/types only.
+- **Boundary**: design only; this skill writes no implementation code.
+- **Rules (apply throughout)**: security section is mandatory; every ADR carries a "Rejected alternatives" entry; a component over ~200 lines is split; every component exposes a testable seam (untestable designs are rejected); the Mermaid diagram compiles; verify every library version and API shape with context7 before specifying it; stress the design with `/grill-me` before any code and resolve or escalate every open question — none deferred into implementation.
 
-Produce all sections below in order. Skip none. No pseudocode — real interfaces/types only.
+## Steps
 
----
-
-### 1. Context
-One paragraph: what this solves and why it exists.
-
-### 2. Tech Stack
-| Component | Technology | Version | Rationale | Rejected Alternatives |
-
-### 3. Security Architecture — MANDATORY, never skip
-OWASP Web Top 10 threat matrix for this domain:
-| A01–A10 | Mitigation | Implementation |
-
-If AI/LLM components present: also OWASP LLM Top 10 (2025) matrix.
-Secrets strategy (env/vault/KMS). Auth/authz model.
-
-### 4. Component Design
-Per component:
-- **Interface** (language-idiomatic — Go `interface`, TS `interface`, etc.)
-- **Responsibility** (one sentence — if more is needed, split the component)
-- **Dependencies** (what it calls; direction must flow inward)
-- **Testable seam** (how it is driven test-first: dependencies behind interfaces, I/O injectable/mockable, pure logic separable from side effects — so a failing test can be written before the implementation)
-
-Clean Architecture layers (outermost → innermost):
-`transport` → `application` → `domain` ← `infrastructure`
-
-### 5. Data Model
-Key domain types/structs/schemas. No ORM annotations in domain layer.
-
-### 6. API Contracts
-| Method | Route | Request | Response | Errors |
-Must match component interface definitions above.
-
-### 7. Data Flow
-Mermaid sequence diagram — happy path, all component interactions.
-
-```mermaid
-sequenceDiagram
-    [real component names]
-```
-
-### 8. Error Handling Strategy
-How errors propagate: infra → domain → application → transport.
-
-### 9. Observability
-| Signal | What | Why |
-Key metrics, log events, trace spans to instrument.
-
-### 10. ADRs — per non-obvious design choice
-- **Context**: why a decision was needed
-- **Decision**: what was chosen
-- **Consequences**: trade-offs accepted
-- **Rejected alternatives**: what was considered and why rejected
-
-## Rules
-- Security section is mandatory — never skip
-- Every ADR requires a "Rejected alternatives" entry
-- Component >~200 lines → it has too many responsibilities → split it
-- Every component must expose a testable seam — untestable designs are rejected
-- Mermaid diagram must compile without errors
-- Before any code is written against this design, stress it with `/grill-me`; decide every gap the requirements support, escalate the rest to the human — never defer an open question into implementation
-- Use context7 to verify any library version, API shape, or framework behavior before specifying it
+1. Confirm the domain/feature and any stated stack, requirements, or constraints; if running before `/planning`, write output as `architecture.md` at project root (the planning pipeline checks for it there).
+2. Draft sections 1–2 (Context, Tech Stack) from [references/sections.md](references/sections.md).
+3. Draft section 3 (Security Architecture) — the OWASP threat matrix; add the OWASP LLM Top 10 matrix when AI/LLM components are present.
+4. Draft sections 4–6 (Component Design with testable seams, Data Model, API Contracts that match the interfaces).
+5. Draft sections 7–9 (Mermaid data flow per [references/data-flow-example.md](references/data-flow-example.md), Error Handling, Observability).
+6. Draft section 10 (ADRs) — one per non-obvious choice, each with rejected alternatives.
+7. Stress the result with `/grill-me`; fold resolved gaps back into the document, escalate the rest to the human.

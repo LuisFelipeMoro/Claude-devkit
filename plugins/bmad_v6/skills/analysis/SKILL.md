@@ -4,6 +4,7 @@ description: Use when you need to analyze requirements, assess code state, or ev
 ---
 
 Run BMAD v6 analysis phase (Analyst + PM only). If no task is provided, ask first.
+Load agent files on demand — never pre-load both at once. Use `references/output-format.md` section headers for all agent output.
 
 > **Scope**: requirements analysis only — no architecture decisions, no Language column, no sub-task decomposition.
 > To create an execution plan from this output, run `/planning`.
@@ -37,19 +38,11 @@ Extract every epic from the PRD and display the **Epic Summary**:
 |------|-------|---------------------|--------------|
 | Epic N: {title} | T{N}.1: {imperative}, T{N}.2: … | AC1, AC2, … | SEC-1, … (or —) |
 
-After showing the summary, print:
-
-```
-Epics found: [Epic 1: X (N tasks), Epic 2: Y (M tasks), ...]
-Analysis complete.
-
-Next steps:
-  → /planning                      — create execution plan (architecture + manifest)
-  → /multi-agent-coding-pipeline   — implement end-to-end (includes planning)
-  → /task-coding-pipeline          — single-task fast pipeline (skips Analyst + PM)
-```
+After showing the summary, print the closing block from [references/output-contract.md](references/output-contract.md).
 
 ---
 
-Use `references/output-format.md` section headers for agent output.
-Load agent files on demand — never pre-load both at once.
+
+---
+
+Behavior contract: [skill.spec.yml](skill.spec.yml) · dependency ledger: [deps.toml](deps.toml).

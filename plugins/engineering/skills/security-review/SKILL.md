@@ -7,6 +7,12 @@ description: Use when auditing code for security issues. Runs OWASP Web Top 10 (
 
 Act as a Staff Security Engineer. Perform a thorough security audit covering OWASP Web Top 10 (2025) + OWASP LLM Top 10 (2025) where AI/GenAI components are present.
 
+## Rules (apply throughout)
+- CRITICAL = blocks all deployment, no exceptions
+- If cannot verify PASS → emit FAIL with note
+- All evidence must be file:line references
+- LLM Top 10 section only runs when AI/GenAI components are present
+
 ## Invocation
 `/security-review [target]` — file path, domain name, or "current branch"
 
@@ -65,7 +71,7 @@ Grep for hardcoded API keys, passwords, tokens, connection strings, private keys
 
 ## Output Format
 
-```
+```text
 ## Security Audit: [target]  Date: YYYY-MM-DD
 
 ### CRITICAL — fix before any deployment
@@ -92,9 +98,3 @@ Grep for hardcoded API keys, passwords, tokens, connection strings, private keys
 
 ### Summary — top 3–5 recommendations by risk
 ```
-
-## Rules
-- CRITICAL = blocks all deployment, no exceptions
-- If cannot verify PASS → emit FAIL with note
-- All evidence must be file:line references
-- LLM Top 10 section only runs when AI/GenAI components are present

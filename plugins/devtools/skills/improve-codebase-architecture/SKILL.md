@@ -1,9 +1,11 @@
 ---
 name: improve-codebase-architecture
-description: Use when deepening architectural quality of a codebase. Finds coupling, boundary violations, missed abstractions, and SRP failures. Produces HTML report in /tmp. Offers ADRs and grilling loop. Trigger phrases: "improve architecture", "architectural review", "find coupling", "refactor architecture", "codebase health", "zoom out", "architectural debt".
+description: 'Use when deepening architectural quality of a codebase. Finds coupling, boundary violations, missed abstractions, and SRP failures. Produces HTML report in /tmp. Offers ADRs and grilling loop. Trigger phrases: "improve architecture", "architectural review", "find coupling", "refactor architecture", "codebase health", "zoom out", "architectural debt".'
 ---
 
 Report findings only — never fix in this skill. Each finding includes severity, location, and a concrete recommendation.
+
+> **Refactor guard**: this skill only reports. Any refactor that follows must be protected by a characterization test first — pin the current observable behaviour with a passing test (it goes RED the moment the refactor changes behaviour), then refactor under green. Never restructure code that has no test covering it; add the test first.
 
 ## Phase 1 — Map (1 Explore sub-agent, model: haiku)
 
@@ -11,19 +13,7 @@ Input: Working directory. Optionally: focus area.
 Output: Raw observations list.
 Boundary: no analysis, no recommendations.
 
-```
-Agent(
-  subagent_type: "Explore",
-  model: "haiku",
-  prompt: "Map [cwd]. Return:
-  1. Module/package dependency list (what imports what)
-  2. Files >300 lines with line count
-  3. Domain logic found in transport/DB/cache layers (file:line)
-  4. 3+ callers of identical logic with no shared abstraction
-  5. Circular or unexpected cross-feature imports
-  Keep each list under 20 entries. Raw observations only — no analysis."
-)
-```
+Dispatch one read-only Explore sub-agent using the call template in `references/arch-report-reference.md`.
 
 ## Phase 2 — Score
 
@@ -50,6 +40,4 @@ Offer: "Want to stress-test any finding? Type `/grill-me` with the finding."
 ## Phase 5 — ADR (optional)
 
 For each Critical/High finding the user wants to address: offer `docs/adr/ADR-NNN-title.md`.
-See `references/arch-report-reference.md` for ADR template.
-
-> **Refactor guard**: this skill only reports — but any refactor that follows must be protected by a characterization test first. Pin the current observable behaviour with a passing test (it goes RED the moment the refactor changes behaviour), then refactor under green. Never restructure code that has no test covering it — add the test first.
+See `references/arch-report-reference.md` for the ADR template.

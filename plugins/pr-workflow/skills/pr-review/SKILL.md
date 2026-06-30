@@ -1,102 +1,35 @@
 ---
 name: pr-review
-description: Use when asked to review a PR or when the post-push hook surfaces open PR comments. Produces structured review: severity-tagged findings, OWASP checklist, language-specific checks.
+description: Review a GitHub pull request and post severity-tagged inline comments with file:line evidence. Use when asked to review a PR or code-review a diff, or when the post-push hook surfaces open PR comments. Produces an OWASP + language-standards + TDD review and a verdict.
 ---
 
-Run when: user asks to review a PR, or when `pr-review-responder.sh` hook output is present after a push.
+# PR Review
 
-## Step 1 — Fetch PR Diff
+Fetch a PR diff, audit it against a fixed checklist, post severity-tagged inline comments, and print a verdict summary.
 
-```bash
-gh pr diff <PR_NUMBER>            # full diff
-gh pr view <PR_NUMBER> --json title,body,baseRefName,headRefName
-gh pr checks <PR_NUMBER>          # CI status
-```
+## Contract
 
-If PR number unknown: `gh pr list --state open` → pick current branch.
+**Inputs**: a PR number (or the current branch to resolve one); a repo with `gh` authenticated. Activated when the user asks to review a PR, or when `pr-review-responder.sh` hook output is present after a push.
+**Outputs**: inline review comments posted via `gh pr review`; a printed summary block with severity counts and an action verdict.
+**Boundary**: does NOT run the full 10-point OWASP audit (use `/security-review`); does NOT merge, close, or modify code; does NOT change CI config.
 
-## Step 2 — Analyse
+**Dependencies** (verify before starting):
+- `gh` — GitHub CLI, authenticated; used to read the diff and post the review.
+- `git` — to resolve the current branch when no PR number is supplied.
 
-Check in this order:
+Machine-checkable behavior contract: `skill.spec.yml` (routes, dependencies, closure, trace).
 
-### Security (OWASP Web Top 10 — fail any CRITICAL immediately)
+## Steps
 
-> **Coverage note**: This review checks A01, A02, A03, A05, A07, A09. Missing: A04 (Insecure Design), A06 (Vulnerable Components), A08 (Software Integrity), A10 (SSRF). For a full 10-point audit run `/security-review`.
-| Check | Look for |
-|-------|---------|
-| A01 Broken Access Control | missing authz checks, IDOR, path traversal |
-| A02 Crypto Failures | hardcoded secrets, weak algorithms, HTTP not HTTPS |
-| A03 Injection | SQL concat, shell exec with user data, eval() |
-| A05 Security Misconfiguration | debug flags in prod, permissive CORS, missing security headers |
-| A07 Auth Failures | insecure token storage, no rate limiting on auth endpoints |
-| A09 Logging Failures | PII/secrets in logs, missing request_id/trace_id |
+1. **Fetch** the PR diff, metadata, and CI status — commands in `references/output-format.md`. If the PR number is unknown, resolve it from the current branch.
+2. **Analyse** the diff against `references/review-checklist.md`, in order: Security (OWASP) → Go/TypeScript standards → TDD compliance → general.
+3. **Format** each issue as one finding per line per `references/output-format.md` (severity emoji + `path:line` + message + suggested fix).
+4. **Post** findings as inline comments and set the review verdict (`--request-changes` if any CRITICAL, else `--comment`, or `--approve` if clean).
+5. **Summarise**: print the summary block with severity counts and the action taken.
 
-### Go Standards (if .go files changed)
-- Error discards: `_ =` or `_ :=` on error returns → CRITICAL
-- Bare `return err` without `fmt.Errorf` wrap → HIGH
-- `panic` outside unrecoverable init → HIGH
-- `interface{}` / `any` on public API → MEDIUM
-- Missing `context.Context` as first param → MEDIUM
-- Missing swaggo annotations on new HTTP handlers → MEDIUM
+**Done when**: every finding is posted via `gh pr review` and the summary block (severity counts + action) is printed. If no open PR resolves for the branch, stop and report that — do not improvise a review.
 
-### TypeScript Standards (if .ts/.tsx files changed)
-- `any` on public API or HTTP boundary → HIGH
-- No zod/joi validation at HTTP boundary → HIGH
-- `Math.random()` for security use → CRITICAL
-- `innerHTML` with user data → CRITICAL
-- Missing `@swagger`/`@ApiOperation` on new endpoints → MEDIUM
+## References
 
-### TDD Compliance (every behaviour in the diff)
-- Missing tests for new code paths → HIGH
-- Test asserts nothing real — tautology, snapshot-only, or asserts a mock was called instead of the result → HIGH
-- Test can never fail (system-under-test fully mocked away) → HIGH
-- Happy path only — no corner/error/boundary cases for the inputs the change touches → MEDIUM
-- An existing test was weakened, deleted, or rewritten to make the change pass → HIGH
-- Coverage regression (check CI checks output) → MEDIUM
-
-### General
-- Commented-out code → LOW
-- TODO/FIXME in production paths → LOW
-
-## Step 3 — Output Format
-
-One finding per line:
-
-```
-path/to/file.go:42: 🔴 CRITICAL: [OWASP A03] SQL query built by string concat. Use parameterized query.
-path/to/handler.go:17: 🟠 HIGH: Error returned without context wrap. Use fmt.Errorf("doing X: %w", err).
-path/to/service.ts:88: 🟡 MEDIUM: No zod schema at HTTP boundary — raw req.body used directly.
-path/to/util.go:5: 🔵 LOW: Commented-out code. Remove it.
-```
-
-Severity key: 🔴 CRITICAL · 🟠 HIGH · 🟡 MEDIUM · 🔵 LOW · ℹ️ INFO
-
-## Step 4 — Post Review Comments
-
-For each finding, post as inline comment:
-```bash
-gh pr review <PR_NUMBER> --comment --body "$(cat <<'EOF'
-**[SEVERITY]** [description]
-
-[explanation of why this is a problem]
-
-Suggested fix:
-\`\`\`go
-// corrected code
-\`\`\`
-EOF
-)"
-```
-
-For CRITICAL findings: `gh pr review <PR_NUMBER> --request-changes --body "..."`
-For findings only: `gh pr review <PR_NUMBER> --comment --body "..."`
-For clean PR: `gh pr review <PR_NUMBER> --approve --body "LGTM — no issues found."`
-
-## Step 5 — Summary
-
-After posting comments, output:
-```
-PR #N Review Summary
-CRITICAL: X  HIGH: Y  MEDIUM: Z  LOW: W
-Action: [REQUEST CHANGES | APPROVED | COMMENTED]
-```
+- Fetch commands, finding line format, comment-posting templates, verdict commands, and the summary block: `references/output-format.md`.
+- Checklist (OWASP + Go + TypeScript + TDD + general), with severity mapping: `references/review-checklist.md`.

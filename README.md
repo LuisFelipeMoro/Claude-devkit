@@ -657,7 +657,7 @@ or with focus area:
 
 **Use when:** adding a new slash command to the devkit.
 
-**What happens:** Scaffolds the skill file with correct frontmatter, phase structure, input/output/boundary definitions, and mirrors it to `~/.claude/skills/`. Follows the same structure as existing skills.
+**What happens:** Scaffolds the skill file with correct frontmatter, phase structure, input/output/boundary definitions, and mirrors it to `~/.claude/skills/`. Follows the same structure as existing skills. Before declaring the skill done, it runs the new skill through [SkillSpec](https://github.com/modiqo/skillspec) `doctor` and adapts the `SKILL.md` for any actionable finding (frontmatter, implicit dependencies, dense activation body, late obligations).
 
 **Example:**
 ```

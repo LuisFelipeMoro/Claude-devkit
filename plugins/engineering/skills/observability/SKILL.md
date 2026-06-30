@@ -1,139 +1,23 @@
 ---
 name: observability
-description: Use when adding structured logging, metrics, or distributed tracing to a service. Covers Go (zap + OpenTelemetry) and TypeScript (pino + OpenTelemetry). Enforces log field standards and trace context propagation.
+description: Add structured logging, metrics, or distributed tracing to a service, covering Go (zap + OpenTelemetry) and TypeScript (pino + OpenTelemetry) with enforced log-field standards and trace-context propagation. Trigger phrases — "logging", "metrics", "tracing", "observability", "instrument", "OpenTelemetry", "structured logs", "monitoring".
 ---
 
-## Step 1 — Determine Scope
+Instrumentation is behaviour: a failing test asserting the log fields or span comes first (RED), then the instrumentation. Every error log must carry `request_id` + `trace_id`, and PII, secrets, and tokens must never appear in any field.
 
-Ask (if not already clear):
-- Logging only, or metrics + tracing too?
-- Go or TypeScript (or both)?
-- Existing instrumentation to extend, or greenfield?
+## Contract
+- Input: a Go or TypeScript service that needs logging, metrics, or tracing.
+- Output: instrumentation plus a RED-first test, matching the field standards and code in `references/logging-and-tracing.md`.
+- Tool boundary: the contract under test is field presence, absent secrets, and span name/attributes — never exact log formatting.
+- Done when: the assert-first test passes and the checklist in `references/test-first-and-checklist.md` holds.
 
-## Step 2 — Assert It First (RED)
+## Steps
+1. Scope the work: logging only, or metrics + tracing too? Go or TypeScript (or both)? Greenfield, or extending existing instrumentation?
+2. Assert it first (RED): a failing test for the intended fields/span against an in-memory sink, per `references/test-first-and-checklist.md`.
+3. Add structured logging from `references/logging-and-tracing.md` — Go zap or TypeScript pino, with the required fields and the no-PII rules.
+4. Add OpenTelemetry tracing from `references/logging-and-tracing.md` — a span around each outbound request, `RecordError` before returning, `defer span.End()`.
+5. Propagate `context.Context` through the request chain (Go) per `references/logging-and-tracing.md`, then confirm the checklist.
 
-Instrumentation is behaviour — test it before adding it. Write a failing test that asserts the log fields / span you are about to emit, using an in-memory sink so no real backend is needed. Run it (RED), then add the instrumentation (GREEN).
-
-```go
-// Go — zaptest/observer captures emitted log entries
-core, logs := observer.New(zap.ErrorLevel)
-logger := zap.New(core)
-processOrder(ctxWith(requestID, traceID), logger, "order-123")   // RED until instrumented
-entry := logs.All()[0]
-require.Equal(t, "failed to process order", entry.Message)
-require.Equal(t, requestID, entry.ContextMap()["request_id"])    // assert required fields present
-require.NotContains(t, entry.ContextMap(), "password")           // assert no secret leaked
-
-// Go — tracetest.NewInMemoryExporter() asserts a span was recorded with attributes
-// TS — pino: pass a stream that collects lines; assert JSON has requestId/traceId, no PII
-```
-
-Assert the **contract** (fields exist, secrets absent, span created with the right name/attributes), not exact formatting. Only after RED do you instrument.
-
-## Step 3 — Structured Logging
-
-### Go — zap
-
-```go
-// Initialize once at startup; pass logger via context or dependency injection
-logger, _ := zap.NewProduction()
-defer logger.Sync()
-
-// Required fields on every log entry at service boundary
-logger.Error("failed to process order",
-    zap.String("request_id", requestID),
-    zap.String("trace_id", traceID),
-    zap.String("order_id", orderID),
-    zap.Error(err),
-)
-```
-
-Rules:
-- Production: `zap.NewProduction()` (JSON output)
-- Never log PII, secrets, tokens, card data
-- Always include `request_id` + `trace_id` on error entries
-- Error level only in production paths — no `Info`/`Debug` in hot paths
-
-### TypeScript — pino
-
-```typescript
-import pino from 'pino'
-
-const logger = pino({
-  level: process.env.LOG_LEVEL ?? 'error',
-  formatters: { level: (label) => ({ level: label }) },
-})
-
-logger.error({ requestId, traceId, orderId, err }, 'failed to process order')
-```
-
-## Step 4 — OpenTelemetry Tracing
-
-### Go
-
-```go
-import (
-    "go.opentelemetry.io/otel"
-    "go.opentelemetry.io/otel/attribute"
-)
-
-func ProcessOrder(ctx context.Context, orderID string) error {
-    ctx, span := otel.Tracer("service-name").Start(ctx, "ProcessOrder")
-    defer span.End()
-
-    span.SetAttributes(attribute.String("order.id", orderID))
-
-    if err := doWork(ctx); err != nil {
-        span.RecordError(err)
-        return fmt.Errorf("processing order %s: %w", orderID, err)
-    }
-    return nil
-}
-```
-
-### TypeScript
-
-```typescript
-import { trace, SpanStatusCode } from '@opentelemetry/api'
-
-const tracer = trace.getTracer('service-name')
-
-async function processOrder(orderId: string): Promise<void> {
-  return tracer.startActiveSpan('processOrder', async (span) => {
-    span.setAttribute('order.id', orderId)
-    try {
-      await doWork()
-    } catch (err) {
-      span.recordException(err as Error)
-      span.setStatus({ code: SpanStatusCode.ERROR })
-      throw err
-    } finally {
-      span.end()
-    }
-  })
-}
-```
-
-## Step 5 — Context Propagation (Go)
-
-Always thread `context.Context` through the call chain. Extract trace/request IDs from context for log fields:
-
-```go
-func requestIDFromContext(ctx context.Context) string {
-    if id, ok := ctx.Value(requestIDKey{}).(string); ok {
-        return id
-    }
-    return ""
-}
-```
-
-## Step 6 — Checklist
-
-- [ ] A failing test asserting the log fields / span was written first (RED) before instrumenting
-- [ ] Logger initialized once at startup, injected via context or constructor
-- [ ] Every error log includes `request_id` + `trace_id`
-- [ ] No PII/secrets/tokens in any log field
-- [ ] Spans created for every external call (DB, HTTP, queue)
-- [ ] `span.RecordError(err)` called before returning errors
-- [ ] Context propagated through entire call chain without breaking
-- [ ] `defer span.End()` called immediately after span creation
+## References
+- `references/logging-and-tracing.md` — Go/TS logging, OpenTelemetry tracing, context propagation, field rules.
+- `references/test-first-and-checklist.md` — the RED assert-first test and the completion checklist.

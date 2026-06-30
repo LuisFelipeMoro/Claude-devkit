@@ -1,0 +1,30 @@
+# skillspec tooling artifacts — NOT read by Claude Code, ignored from version control.
+# Claude's skill loader only reads SKILL.md (+ references/ linked from it). The files
+# below exist solely for the `skillspec` CLI (contract, dependency ledger, import
+# scaffolding) and have zero effect on how the skills run in Claude. Regenerate any
+# time with `skillspec import-skill`.
+**/skill.spec.yml
+**/deps.toml
+**/source/
+**/imports/
+**/resources/
+**/.skillspec/
+
+# NOTE: references/ is intentionally NOT ignored — those files are linked from SKILL.md
+# and load on demand in Claude, so they affect skill behavior and must be committed.
+
+# Local Claude Code settings (machine-specific permissions/state — never shared)
+.claude/settings.local.json
+
+# Generated SkillSpec doctor report (regenerable; not read by Claude)
+SKILLSPEC-REPORT.md
+
+# OS / editor junk
+.DS_Store
+*.swp
+*.swo
+*~
+
+# Rust build output (if skillspec is built from source in-tree)
+/target/
+**/*.rs.bk

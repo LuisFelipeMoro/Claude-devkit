@@ -1,99 +1,33 @@
 ---
 name: checkcomments
-description: Use when the user runs /checkcomments — reads the current branch, finds the open PR, and lists all comments with file name and line number. Read-only, no changes made.
+description: List every open comment on the current branch's PR with file name and line number. Use when the user runs /checkcomments or asks to see PR review comments. Read-only — finds the open PR, fetches inline and general comments, and prints them grouped by file.
 ---
 
-# githubzak: Check PR Comments
+# checkcomments
 
-List all open comments on the current branch's PR. No actions taken, no files modified.
+List all open comments on the current branch's PR, grouped by file. No actions taken, no files modified.
 
-## Step 1 — Verify prerequisites
+## Contract
 
-Check that `gh` is available and authenticated:
+**Inputs**: the current git branch (used to resolve the open PR); a repo with `gh` authenticated.
+**Outputs**: a printed report — the PR URL, inline comments grouped by file and sorted by line, then general PR comments. No files written, no API mutations.
+**Boundary**: does NOT reply to, resolve, or create comments; does NOT modify code, branches, or the PR.
 
-```bash
-gh auth status
-```
+**Dependencies** (verify before starting):
+- `gh` — GitHub CLI, authenticated; used to resolve the PR and read comments via `gh api`.
+- `git` — to read the current branch name.
 
-If this fails, report the error and stop. Do not proceed without a working `gh` session.
+## Steps
 
-## Step 2 — Get current branch
+1. Verify prerequisites — `gh auth status`; stop if not authenticated.
+2. Get the current branch (`git branch --show-current`); stop if detached HEAD.
+3. Find the open PR for that branch; stop if none — report "No open PR found".
+4. Resolve `OWNER` and `REPO`.
+5. Fetch inline review comments (`pulls/.../comments`).
+6. Fetch general PR comments (`issues/.../comments`).
+7. Display: PR URL, inline comments grouped by file and sorted by line, then general comments.
 
-```bash
-git branch --show-current
-```
+Exact commands, API field handling, alignment rules, and the output example: `references/procedure.md`.
+Machine-checkable behavior contract: `skill.spec.yml` (route, dependencies, closure, trace).
 
-If the output is empty (detached HEAD), report "Not on a named branch — cannot look up a PR" and stop.
-
-Store the result as `BRANCH`.
-
-## Step 3 — Find open PR
-
-```bash
-PR_NUMBER=$(gh pr list --head <BRANCH> --state open --json number --jq '.[0].number')
-PR_URL=$(gh pr list --head <BRANCH> --state open --json url --jq '.[0].url')
-```
-
-If either result is empty or null, report "No open PR found for branch `<BRANCH>`" and stop.
-
-Store `PR_NUMBER` and `PR_URL` from the results above.
-
-## Step 4 — Get owner and repo
-
-```bash
-OWNER=$(gh repo view --json owner --jq '.owner.login')
-REPO=$(gh repo view --json name --jq '.name')
-```
-
-Store `OWNER` and `REPO` from the results above.
-
-## Step 5 — Fetch inline review comments
-
-```bash
-gh api "repos/<OWNER>/<REPO>/pulls/<PR_NUMBER>/comments?per_page=100"
-```
-
-Results are returned chronologically (oldest first, the API default). Each item has:
-- `path` — file path relative to repo root
-- `line` — current line number. If `line` is null, fall back to `original_line`. If both are null (outdated/deleted context), display the line as `?` (e.g. `filename.kt:?`)
-- `body` — comment text
-- `id` — comment ID (used internally; not displayed in output)
-
-## Step 6 — Fetch general PR comments
-
-```bash
-gh api "repos/<OWNER>/<REPO>/issues/<PR_NUMBER>/comments?per_page=100"
-```
-
-Results are returned chronologically (oldest first, the API default). Each item has:
-- `body` — comment text
-- `id` — comment ID
-- No `path` or `line` — these are top-level PR comments, not tied to a file
-
-## Step 7 — Display results
-
-Print the PR URL first, then the comment list.
-
-Group inline comments by file, sorted by line number. Truncate comment bodies to 80 characters with `...` if longer.
-
-For alignment, left-align the `filename:line` part padded to the width of the longest `filename:line` entry in the list, then ` — `, then the truncated comment body in quotes.
-
-Output format (example where `SuperNiceController.kt:183` is the longest entry at 26 chars):
-
-```
-PR: <PR_URL>
-
-### Inline comments
-
-SuperNiceController.kt:183  — "You're calling the same function twice..."
-SuperNiceController.kt:210  — "This method is too long, consider extracting..."
-AuthService.kt:44           — "Missing null check here"
-
-### General comments
-
-[General] — "Overall this PR looks good but the error handling needs work"
-```
-
-If there are no inline comments, print "No inline comments." under that section.
-If there are no general comments, print "No general comments." under that section.
-If there are no comments at all, print "No comments found on PR #<PR_NUMBER>."
+**Done when**: the PR URL and both comment sections are printed (each section shows its "No … comments." line when empty). If no open PR resolves for the branch, stop and report that instead of printing an empty report.

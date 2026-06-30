@@ -1,5 +1,35 @@
 # Changelog
 
+## [Unreleased]
+
+### SkillSpec validation pass — all 23 skills
+
+Ran every `SKILL.md` through [SkillSpec](https://github.com/modiqo/skillspec) `doctor`, which
+scores **agent follow-through risk** (the chance an agent skips, reorders, improvises, or
+finishes without proof given a skill's shape), and acted on the findings:
+
+- **Leaner activation bodies** — heavy tables, templates, and examples moved out of the
+  always-loaded `SKILL.md` into on-demand `references/*` (net −1236/+278 lines across the 23
+  skills). Lower per-session context cost, same coverage.
+- **Sharper discovery** — descriptions rewritten use-case-first; trigger phrases preserved.
+- **Tidier structure** — labeled code fences, critical rules lifted toward the top.
+
+Only the files Claude actually reads (`SKILL.md` + linked `references/`) are committed. The
+SkillSpec contract scaffolding (`skill.spec.yml`, `deps.toml`, `source/`, `imports/`,
+`resources/`, `.skillspec/`) is tool-only — Claude never loads it — and is `.gitignore`d.
+
+### `write-a-skill` now self-validates
+
+The `/write-a-skill` skill gained a mandatory **Validate** step: after scaffolding, it runs the
+new skill through `skillspec doctor`, adapts the `SKILL.md` for any actionable finding, and
+re-runs until clean — a skill is not "done" until SkillSpec has run and its findings are
+resolved or explicitly justified. Finding-to-fix map in `references/skillspec-validation.md`.
+
+### Housekeeping
+
+- `.gitignore` added for SkillSpec tool artifacts and `.claude/settings.local.json`
+  (machine-local permissions/state, now untracked).
+
 ## [1.0.0] — 2026-06-26
 
 First tagged release. It combines the TDD-first + Harness foundation with an

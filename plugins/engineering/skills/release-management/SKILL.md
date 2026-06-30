@@ -1,78 +1,22 @@
 ---
 name: release-management
-description: Use when asked to cut a release, bump version, or generate a changelog. Determines semver bump from conventional commits, updates CHANGELOG.md, creates git tag, pushes, drafts GitHub release.
+description: Cut a release by determining the semver bump from conventional commits, updating CHANGELOG.md, tagging, pushing, and drafting a GitHub release. Trigger phrases — "release", "cut a release", "bump version", "changelog", "tag", "semver", "publish", "release notes".
 ---
 
-## Step 1 — Determine Version Bump
+The version bump follows the conventional commits since the last tag, and the GitHub release stays a draft for the human to review before publishing — nothing publishes automatically.
 
-```bash
-# Get last tag
-git describe --tags --abbrev=0
+## Contract
+- Input: a repository with conventional-commit history since the last tag.
+- Output: an updated CHANGELOG.md, an annotated git tag pushed to origin, and a drafted GitHub release URL.
+- Tool boundary: the draft release is never auto-published; version confirmation is requested from the user before tagging.
+- Done when: the draft release URL prints for the user to review and publish.
 
-# Commits since last tag
-git log <last-tag>..HEAD --oneline --no-decorate
-```
+## Steps
+1. Determine the version bump: the git commands and the conventional-commit→semver table in `references/commands-and-templates.md` map commits since the last tag, where the highest-priority type wins.
+2. Compute the new `vX.Y.Z` from the last tag, then confirm it with the user before tagging.
+3. Update CHANGELOG.md from the Keep a Changelog template in `references/commands-and-templates.md`, grouping commits by type.
+4. Tag and push with the git commands in `references/commands-and-templates.md`.
+5. Draft the GitHub release with the `gh` command in `references/commands-and-templates.md`, then hand the resulting URL to the user.
 
-Map conventional commit types to semver:
-| Commit type | Bump |
-|-------------|------|
-| `feat!:` or `BREAKING CHANGE:` footer | MAJOR |
-| `feat:` | MINOR |
-| `fix:` `perf:` `refactor:` `chore:` `docs:` `test:` `ci:` | PATCH |
-
-Rule: highest-priority type in the set wins.
-
-## Step 2 — Compute New Version
-
-Parse last tag as `vMAJOR.MINOR.PATCH`. Apply bump. New tag = `vX.Y.Z`.
-
-Ask user to confirm: `Next version: vX.Y.Z — confirm? (y/n)`
-
-## Step 3 — Update CHANGELOG.md
-
-Follow [Keep a Changelog](https://keepachangelog.com) format. Insert new section above previous entries:
-
-```markdown
-## [X.Y.Z] — YYYY-MM-DD
-
-### Added
-- feat: [description] ([commit-sha])
-
-### Fixed
-- fix: [description] ([commit-sha])
-
-### Changed
-- refactor/perf: [description] ([commit-sha])
-
-### Breaking Changes
-- feat!: [description] — **Migration**: [what callers must change]
-```
-
-Group commits by type. Skip `chore:`, `docs:`, `test:`, `ci:` unless they affect users.
-
-## Step 4 — Tag and Push
-
-```bash
-git add CHANGELOG.md
-git commit -m "chore(release): vX.Y.Z"
-git tag -a vX.Y.Z -m "Release vX.Y.Z"
-git push origin HEAD
-git push origin vX.Y.Z
-```
-
-## Step 5 — Draft GitHub Release
-
-```bash
-gh release create vX.Y.Z \
-  --title "vX.Y.Z" \
-  --notes "$(cat <<'EOF'
-## What's Changed
-[paste CHANGELOG section content]
-
-**Full Changelog**: https://github.com/{owner}/{repo}/compare/vPREV...vX.Y.Z
-EOF
-)" \
-  --draft
-```
-
-Output: release URL for user to review + publish.
+## References
+- `references/commands-and-templates.md` — git/gh commands, the semver mapping table, and the CHANGELOG template.

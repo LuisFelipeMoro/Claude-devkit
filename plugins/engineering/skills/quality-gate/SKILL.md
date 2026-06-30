@@ -1,57 +1,23 @@
 ---
 name: quality-gate
-description: Use when you need to verify code is shippable. Detects the project stack, runs format + lint + type-check + tests + vuln scan in the correct order, and reports PASS/FAIL per gate. All gates must pass before any handoff. Trigger phrases: "quality gate", "run gates", "CI check", "lint", "coverage", "run tests", "check before PR".
+description: Verify code is shippable by detecting the project stack and reporting PASS or FAIL for every gate before handoff. Trigger phrases — "quality gate", "run gates", "CI check", "lint", "coverage", "run tests", "check before PR".
 ---
 
-Detect the project stack, run every gate for that stack, report PASS/FAIL. All gates must pass before handoff.
+Every gate must pass before handoff; a single failing gate blocks the handoff.
 
-## Stack Detection
+## Contract
+- Input: a working directory containing source code.
+- Output: a report table with one PASS/FAIL row per gate plus an overall verdict line.
+- Tool boundary: read-only verification; source files stay unmodified, never auto-fixed.
+- Done when: the report table prints with an overall verdict line and a coverage figure.
 
-```bash
-find . -maxdepth 2 -name "go.mod" -o -name "Cargo.toml" -o -name "pom.xml" \
-  -o -name "build.gradle" -o -name "package.json" -o -name "composer.json" \
-  -o -name "tsconfig.json" -o -name "pubspec.yaml" 2>/dev/null
-```
+## Steps
+1. Detect the stack from the markers in `references/stack-detection.md`. Monorepos match every stack present.
+2. For each detected stack, the gate commands in `references/quality-gate-reference.md` apply in the fail-fast order from `references/execution-and-report.md`: format, type/vet, lint, tests + coverage, race (Go), vulnerability scan.
+3. Tests + coverage is the mandatory sensor: every changed source file wants a corresponding test, and coverage below threshold counts as a failing gate.
+4. The report table and overall verdict line follow the template in `references/execution-and-report.md`. The verdict line states PASS when every gate is green.
 
-Stop at first match per stack. Multi-language monorepos run all matched stacks.
-
-| File | Stack |
-|------|-------|
-| `go.mod` | Go |
-| `Cargo.toml` | Rust |
-| `pom.xml` / `build.gradle*` | Java |
-| `package.json` + `tsconfig.json` + `next.config.*` | Next.js |
-| `package.json` + `tsconfig.json` + `"react"` in deps | React |
-| `package.json` + `tsconfig.json` | TypeScript |
-| `composer.json` | PHP |
-| `pubspec.yaml` | Flutter |
-| `build.gradle.kts` + `android {}` | Kotlin Android |
-
-For gate commands per stack, see `references/quality-gate-reference.md`.
-
-## Execution Order (fail-fast by default)
-
-1. Format check *(fastest)*
-2. Type check / vet / static analysis
-3. Lint
-4. Tests + coverage — the mandatory test-runner sensor; every changed source file should have a corresponding test (TDD evidence). Coverage below threshold = FAIL.
-5. Race detector *(Go only)*
-6. Vulnerability scan *(network — run last)*
-
-## Output
-
-```
-## Quality Gate Report — {Stack}
-
-| Gate     | Status  | Details                               |
-|----------|---------|---------------------------------------|
-| vet      | ✅ PASS | —                                     |
-| lint     | ❌ FAIL | handler.go:42 — unhandled error       |
-| coverage | ✅ PASS | 87.3% (≥ 85%)                        |
-
-Overall: ❌ FAIL — 1 gate failed. Fix before handoff.
-```
-
-Full pass: `Overall: ✅ PASS — all gates green · {X}% coverage · {N} tests`
-
-For common fixes per gate failure, see `references/quality-gate-reference.md`.
+## References
+- `references/stack-detection.md` — detection command and file→stack table.
+- `references/execution-and-report.md` — gate order and report template.
+- `references/quality-gate-reference.md` — per-stack gate commands and common fixes.
