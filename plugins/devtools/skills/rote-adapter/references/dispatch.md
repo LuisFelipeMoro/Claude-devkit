@@ -1,15 +1,17 @@
 # rote-adapter dispatch template
 
-Dispatch the autonomous `rote-adapter` sub-agent with this call. Do not load
-`agents/rote-adapter.md` into the main context — the sub-agent reads it itself.
+Dispatch the autonomous rote-adapter sub-agent with this call. The dispatched
+subagent already carries its persona; do not read the agent file into the main
+context. Use `subagent_type: "bmad_v6:rote-adapter"` in a plugin install, or
+`"rote-adapter"` in a flat `~/.claude/agents` install.
 
 ```text
 Agent(
   description: "rote-adapter — autonomous adapter creation",
-  subagent_type: "rote-adapter",
+  subagent_type: "bmad_v6:rote-adapter",
   model: "sonnet",
   prompt: """
-Read agents/rote-adapter.md — that is your persona and full 8-phase instructions.
+You are the rote-adapter agent — follow your full 8-phase persona.
 
 Integration target: [paste user's integration description — service name, what data/actions needed]
 Working directory: [cwd]

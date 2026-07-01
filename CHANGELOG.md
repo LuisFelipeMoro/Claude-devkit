@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.1.1] — 2026-07-01
+
+### Fixed
+
+- **Cross-plugin agent references now resolve under the plugin install.** Two skills pointed
+  at `agents/<name>.md` for an agent that lives in a *different* plugin, so the relative path
+  dangled once installed via the plugin manager (all 18 agents ship in `bmad_v6`):
+  - `engineering/code-review-gate` → the **Reviewer** (its Phase 2 gate). Now dispatches the
+    `bmad_v6:reviewer` subagent (falls back to `reviewer` in a flat `~/.claude/agents` install)
+    instead of reading `agents/reviewer.md`. This was the quality-gate wiring bug — the gate
+    could skip its independent Reviewer under the plugin install.
+  - `devtools/rote-adapter` → the `bmad_v6:rote-adapter` subagent, same treatment.
+
+  In-plugin references (all `bmad_v6` pipeline skills) were already correct and are unchanged.
+  Git and Claude Code hooks invoke no agents by design (exit-code sensors + shell), so they were
+  not affected.
+
 ## [1.1.0] — 2026-07-01
 
 ### SkillSpec validation pass — all 23 skills
