@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [1.1.0] — 2026-07-01
 
 ### SkillSpec validation pass — all 23 skills
 
@@ -24,6 +24,15 @@ The `/write-a-skill` skill gained a mandatory **Validate** step: after scaffoldi
 new skill through `skillspec doctor`, adapts the `SKILL.md` for any actionable finding, and
 re-runs until clean — a skill is not "done" until SkillSpec has run and its findings are
 resolved or explicitly justified. Finding-to-fix map in `references/skillspec-validation.md`.
+
+### Fixed
+
+- **`install-global.sh` (Option C flat install) rewritten for the multi-plugin layout.**
+  The old script only looked at `bmad_v6` and expected flat `skills/*.md`, so against the
+  current marketplace (4 plugins, directory-format `skills/<name>/SKILL.md`) it installed
+  **zero skills** and missed three plugins. It now walks every plugin — installing all 23
+  skills and 18 agents — and copies only the files Claude reads (`SKILL.md` + `references/`),
+  skipping SkillSpec tool scaffolding.
 
 ### Housekeeping
 
