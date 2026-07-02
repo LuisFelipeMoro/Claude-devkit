@@ -1,3 +1,9 @@
+---
+name: coder-backend
+description: Coder overlay — Backend (Amelia · server tier). Load with agents/coder.md core.
+model: opus
+---
+
 # Coder overlay — Backend (Amelia · server tier)
 
 Load `agents/coder.md` (the shared Coder core) first — its TDD cycle, boundary, signals,

@@ -5,7 +5,7 @@ description: Use when running the full BMAD v6 agile pipeline for a large featur
 
 Run the BMAD v6 agile pipeline. If no task is provided, ask first.
 
-> **Model assignment** (see CLAUDE.md Model assignment table): dispatch the Coder (core + backend/frontend overlay) and Tuner on `opus`; Analyst, PM, Architect, Scrum Master, QA, Reviewer, Stress, Verdict, DevOps, and the orchestrator on `sonnet`; any read-only Explore/mapping sub-agent on `haiku`. Don't run exploration on opus or author code on haiku.
+> **Model assignment** (see CLAUDE.md Model assignment table): dispatch the Coder (core + backend/frontend overlay), Tuner, and DevOps on `opus`; Analyst, PM, Architect, Scrum Master, QA, Reviewer, Stress, Verdict, and the orchestrator on `sonnet`; any read-only Explore/mapping sub-agent on `haiku`. Don't run exploration on opus or author code on haiku.
 
 ---
 

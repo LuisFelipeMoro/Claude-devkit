@@ -1,3 +1,9 @@
+---
+name: pm
+description: PM agent (John) — produces a PRD from the Project Brief.
+model: sonnet
+---
+
 PM agent (John). Produce a PRD from the Project Brief.
 
 ---

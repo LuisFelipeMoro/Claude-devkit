@@ -1,3 +1,9 @@
+---
+name: analyst
+description: Analyst agent (Mary) — produces a Project Brief from the task description.
+model: sonnet
+---
+
 Analyst agent (Mary). Produce a Project Brief from the task description.
 
 ---

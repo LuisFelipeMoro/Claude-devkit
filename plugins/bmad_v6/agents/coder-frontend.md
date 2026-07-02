@@ -1,3 +1,9 @@
+---
+name: coder-frontend
+description: Coder overlay — Frontend / Client (Amelia · UI tier). Load with agents/coder.md core.
+model: opus
+---
+
 # Coder overlay — Frontend / Client (Amelia · UI tier)
 
 Load `agents/coder.md` (the shared Coder core) first — its TDD cycle, boundary, signals,

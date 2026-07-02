@@ -1,3 +1,9 @@
+---
+name: architect
+description: Architect agent (Winston) — produces an Architecture Document from the PRD.
+model: sonnet
+---
+
 Architect agent (Winston). Produce an Architecture Document from the PRD.
 
 ---
